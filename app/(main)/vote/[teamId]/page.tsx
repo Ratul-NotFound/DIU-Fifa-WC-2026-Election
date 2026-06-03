@@ -12,7 +12,7 @@ import {
   getUserVoteForPosition,
 } from '@/lib/firebase/firestore';
 import type { Team, Position, Candidate, ElectionSettings } from '@/lib/types';
-import { voteKey, truncate, getTeamFlagUrl } from '@/lib/utils/helpers';
+import { voteKey, truncate, getTeamFlagUrl, getTeamAccentColor } from '@/lib/utils/helpers';
 
 export default function VotePage() {
   const params = useParams();
@@ -151,7 +151,13 @@ export default function VotePage() {
           <img 
             src={getTeamFlagUrl(team.flag)} 
             alt={team.name}
-            style={{ width: '48px', height: 'auto', borderRadius: '4px', boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)' }}
+            className="flag-circular"
+            style={{ 
+              width: '48px', 
+              height: '48px',
+              '--team-accent': getTeamAccentColor(team.name),
+              '--team-accent-glow': getTeamAccentColor(team.name) + '33',
+            } as React.CSSProperties}
           />
         </div>
         <div>

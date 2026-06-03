@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { getTeams, createTeam, updateTeam, deleteTeam, addAuditLog } from '@/lib/firebase/firestore';
 import { useAuth } from '@/lib/context/AuthContext';
 import type { Team } from '@/lib/types';
-import { getTeamFlagUrl } from '@/lib/utils/helpers';
+import { getTeamFlagUrl, getTeamAccentColor } from '@/lib/utils/helpers';
 
 const defaultForm = { name: '', flag: '', logo: '', banner: '', description: '' };
 
@@ -89,7 +89,14 @@ export default function AdminTeamsPage() {
                   <img 
                     src={getTeamFlagUrl(t.flag)} 
                     alt={t.name}
-                    style={{ width: '32px', height: 'auto', borderRadius: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', display: 'block' }}
+                    className="flag-circular"
+                    style={{ 
+                      width: '32px', 
+                      height: '32px', 
+                      display: 'block',
+                      '--team-accent': getTeamAccentColor(t.name),
+                      '--team-accent-glow': getTeamAccentColor(t.name) + '25',
+                    } as React.CSSProperties}
                   />
                 </td>
                 <td data-label="Name"><strong>{t.name}</strong></td>

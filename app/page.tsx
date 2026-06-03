@@ -56,7 +56,6 @@ export default async function LandingPage() {
 
       <div className="page-wrapper">
         {/* ── Hero ── */}
-        {/* ── Hero ── */}
         <section className="hero" style={{ marginTop: 0 }}>
           <div className="container">
             <div className="hero-grid">
@@ -92,62 +91,52 @@ export default async function LandingPage() {
                 </div>
               </div>
 
-              {/* Right Column: FUT Showcase Cards */}
-              <div className="hero-visuals">
-                {/* Brazil Card */}
-                <div className="fut-card brazil">
-                  <div className="fut-card-badge">
-                    <div>
-                      <div className="fut-card-rating">95</div>
-                      <div className="fut-card-position">LDR</div>
-                    </div>
-                    <img src="https://flagcdn.com/w80/br.png" alt="Brazil" className="fut-card-flag" />
+              {/* Right Column: Live Ballot scoreboard monitor */}
+              <div className="hero-scoreboard">
+                <div className="scoreboard-title">DIU Live Standings</div>
+                
+                <div className="scoreboard-row" style={{ borderLeft: '3.5px solid #75aadb', paddingLeft: 'var(--space-2)', background: 'rgba(117, 170, 219, 0.04)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: '#75aadb', width: '20px' }}>1ST</div>
+                  <div className="scoreboard-team" style={{ flex: 1 }}>
+                    <img src="https://flagcdn.com/w80/ar.png" alt="Argentina" className="scoreboard-flag-icon" style={{ borderColor: '#75aadb' }} />
+                    <span className="scoreboard-team-name">Argentina (SWE)</span>
                   </div>
-                  <div className="fut-card-player">
-                    <img 
-                      src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=120&h=120&q=80" 
-                      alt="A. Rahman" 
-                      style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ffd100', marginBottom: 'var(--space-2)' }} 
-                    />
-                    <div className="fut-card-name">A. RAHMAN</div>
-                  </div>
-                  <div className="fut-card-divider"></div>
-                  <div className="fut-card-stats">
-                    <div className="fut-stat-item"><span>VOT</span><span className="fut-stat-value">95</span></div>
-                    <div className="fut-stat-item"><span>PAC</span><span className="fut-stat-value">94</span></div>
-                    <div className="fut-stat-item"><span>PAS</span><span className="fut-stat-value">90</span></div>
-                    <div className="fut-stat-item"><span>DRI</span><span className="fut-stat-value">91</span></div>
-                    <div className="fut-stat-item"><span>DEF</span><span className="fut-stat-value">85</span></div>
-                    <div className="fut-stat-item"><span>PHY</span><span className="fut-stat-value">88</span></div>
-                  </div>
+                  <span className="scoreboard-metric" style={{ color: '#75aadb' }}>29 Votes</span>
                 </div>
 
-                {/* Argentina Card */}
-                <div className="fut-card argentina">
-                  <div className="fut-card-badge">
-                    <div>
-                      <div className="fut-card-rating">98</div>
-                      <div className="fut-card-position">LDR</div>
-                    </div>
-                    <img src="https://flagcdn.com/w80/ar.png" alt="Argentina" className="fut-card-flag" />
+                <div className="scoreboard-row" style={{ borderLeft: '3.5px solid #009739', paddingLeft: 'var(--space-2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', width: '20px' }}>2ND</div>
+                  <div className="scoreboard-team" style={{ flex: 1 }}>
+                    <img src="https://flagcdn.com/w80/br.png" alt="Brazil" className="scoreboard-flag-icon" style={{ borderColor: '#009739' }} />
+                    <span className="scoreboard-team-name">Brazil (CSE)</span>
                   </div>
-                  <div className="fut-card-player">
-                    <img 
-                      src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&h=120&q=80" 
-                      alt="T. Ahmed" 
-                      style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #75aadb', marginBottom: 'var(--space-2)' }} 
-                    />
-                    <div className="fut-card-name">T. AHMED</div>
+                  <span className="scoreboard-metric" style={{ color: 'var(--text-primary)' }}>20 Votes</span>
+                </div>
+
+                <div className="scoreboard-row" style={{ borderLeft: '3.5px solid #dd0000', paddingLeft: 'var(--space-2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', width: '20px' }}>3RD</div>
+                  <div className="scoreboard-team" style={{ flex: 1 }}>
+                    <img src="https://flagcdn.com/w80/de.png" alt="Germany" className="scoreboard-flag-icon" style={{ borderColor: '#dd0000' }} />
+                    <span className="scoreboard-team-name">Germany (EEE)</span>
                   </div>
-                  <div className="fut-card-divider"></div>
-                  <div className="fut-card-stats">
-                    <div className="fut-stat-item"><span>VOT</span><span className="fut-stat-value">98</span></div>
-                    <div className="fut-stat-item"><span>PAC</span><span className="fut-stat-value">92</span></div>
-                    <div className="fut-stat-item"><span>PAS</span><span className="fut-stat-value">96</span></div>
-                    <div className="fut-stat-item"><span>DRI</span><span className="fut-stat-value">95</span></div>
-                    <div className="fut-stat-item"><span>DEF</span><span className="fut-stat-value">82</span></div>
-                    <div className="fut-stat-item"><span>PHY</span><span className="fut-stat-value">84</span></div>
+                  <span className="scoreboard-metric" style={{ color: 'var(--text-primary)' }}>12 Votes</span>
+                </div>
+
+                <div className="scoreboard-row" style={{ borderLeft: '3.5px solid #002395', paddingLeft: 'var(--space-2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', width: '20px' }}>4TH</div>
+                  <div className="scoreboard-team" style={{ flex: 1 }}>
+                    <img src="https://flagcdn.com/w80/fr.png" alt="France" className="scoreboard-flag-icon" style={{ borderColor: '#002395' }} />
+                    <span className="scoreboard-team-name">France (BBA)</span>
                   </div>
+                  <span className="scoreboard-metric" style={{ color: 'var(--text-primary)' }}>8 Votes</span>
+                </div>
+
+                <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <span style={{ width: '6px', height: '6px', background: 'var(--green)', borderRadius: '50%', display: 'inline-block' }} /> 
+                    SYSTEM ONLINE
+                  </span>
+                  <span>TOTAL TURNOUT: 69</span>
                 </div>
               </div>
 

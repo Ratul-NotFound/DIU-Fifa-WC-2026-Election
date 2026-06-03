@@ -137,6 +137,7 @@ export default function ResultsPage() {
       <div className="team-tabs">
         {teams.map(t => {
           const isActive = selectedTeam === t.id;
+          const accentColor = getTeamAccentColor(t.name);
           return (
             <button
               key={t.id}
@@ -144,13 +145,17 @@ export default function ResultsPage() {
               onClick={() => handleTeamChange(t.id)}
               id={`results-team-${t.id}`}
               style={{
-                borderBottom: isActive ? `3px solid ${getTeamAccentColor(t.name)}` : undefined
-              }}
+                '--team-accent': accentColor,
+                '--team-accent-glow': accentColor + '25',
+                borderColor: isActive ? accentColor : undefined,
+                boxShadow: isActive ? `0 0 10px ${accentColor}33` : undefined,
+              } as React.CSSProperties}
             >
               <img 
                 src={getTeamFlagUrl(t.flag)} 
                 alt={t.name}
-                style={{ width: '18px', height: 'auto', borderRadius: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
+                className="flag-circular"
+                style={{ width: '18px', height: '18px' }}
               />
               <span>{t.name}</span>
             </button>
