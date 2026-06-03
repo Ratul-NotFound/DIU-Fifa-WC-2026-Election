@@ -1,38 +1,47 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { getSessionUser } from '@/lib/server/auth';
+import { fetchUserProfile } from '@/lib/server/firestore';
+import { getAdminDb } from '@/lib/firebase/admin';
+import LogoutButton from '@/components/account/LogoutButton';
 
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/context/AuthContext';
-import { updateUserProfile } from '@/lib/firebase/firestore';
+async function updateProfileAction(formData: FormData) {
+  'use server';
 
-export default function ProfilePage() {
-  const { profile, refreshProfile } = useAuth();
-  const [form, setForm] = useState({ name: '', studentId: '', department: '', batch: '' });
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState('');
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) redirect('/login');
 
-  useEffect(() => {
-    if (profile) {
-      setForm({
-        name: profile.name ?? '',
-        studentId: profile.studentId ?? '',
-        department: profile.department ?? '',
-        batch: profile.batch ?? '',
-      });
-    }
-  }, [profile]);
+  const name = String(formData.get('name') || '').trim();
+  const studentId = String(formData.get('studentId') || '').trim();
+  const department = String(formData.get('department') || '').trim();
+  const batch = String(formData.get('batch') || '').trim();
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profile) return;
-    setSaving(true);
-    await updateUserProfile(profile.uid, form);
-    await refreshProfile();
-    setSaving(false);
-    setMsg('Profile updated successfully!');
-    setTimeout(() => setMsg(''), 3000);
-  };
+  if (!name) {
+    redirect('/profile?error=1');
+  }
 
-  if (!profile) return <div className="loading-center"><div className="spinner" /></div>;
+  await getAdminDb().collection('users').doc(sessionUser.uid).update({
+    name,
+    studentId,
+    department,
+    batch,
+  });
+
+  redirect('/profile?updated=1');
+}
+
+export default async function ProfilePage({
+  searchParams,
+}: {
+  searchParams: { updated?: string; error?: string };
+}) {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) redirect('/login');
+
+  const profile = await fetchUserProfile(sessionUser.uid);
+  if (!profile) redirect('/login');
+
+  const updated = searchParams.updated === '1';
+  const error = searchParams.error === '1';
 
   return (
     <div className="page-content" style={{ maxWidth: 560 }}>
@@ -43,7 +52,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {msg && <div className="alert alert-success" style={{ marginBottom: 'var(--space-4)' }}>{msg}</div>}
+      {updated && <div className="alert alert-success" style={{ marginBottom: 'var(--space-4)' }}>Profile updated successfully!</div>}
+      {error && <div className="alert alert-error" style={{ marginBottom: 'var(--space-4)' }}>Please enter your full name.</div>}
 
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
@@ -59,26 +69,27 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <form action={updateProfileAction} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <div className="form-group">
             <label className="form-label" htmlFor="pf-name">Full Name</label>
-            <input id="pf-name" type="text" className="form-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
+            <input id="pf-name" name="name" type="text" className="form-input" defaultValue={profile.name} required />
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="pf-sid">Student ID</label>
-            <input id="pf-sid" type="text" className="form-input" placeholder="e.g. 221-15-0000" value={form.studentId} onChange={e => setForm(f => ({ ...f, studentId: e.target.value }))} />
+            <input id="pf-sid" name="studentId" type="text" className="form-input" placeholder="e.g. 221-15-0000" defaultValue={profile.studentId} />
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="pf-dept">Department</label>
-            <input id="pf-dept" type="text" className="form-input" placeholder="e.g. CSE" value={form.department} onChange={e => setForm(f => ({ ...f, department: e.target.value }))} />
+            <input id="pf-dept" name="department" type="text" className="form-input" placeholder="e.g. CSE" defaultValue={profile.department} />
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="pf-batch">Batch</label>
-            <input id="pf-batch" type="text" className="form-input" placeholder="e.g. 58th" value={form.batch} onChange={e => setForm(f => ({ ...f, batch: e.target.value }))} />
+            <input id="pf-batch" name="batch" type="text" className="form-input" placeholder="e.g. 58th" defaultValue={profile.batch} />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={saving} id="btn-save-profile">
-            {saving ? 'Saving…' : 'Save Changes'}
+          <button type="submit" className="btn btn-primary" id="btn-save-profile">
+            Save Changes
           </button>
+          <LogoutButton className="btn btn-danger" id="btn-profile-logout" />
         </form>
       </div>
 

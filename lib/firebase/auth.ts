@@ -9,7 +9,7 @@ import {
   type User,
 } from 'firebase/auth';
 import { auth } from './config';
-import { createUserProfile, getUserProfile } from './firestore';
+import { createUserProfile, getUserProfile, updateUserProfile } from './firestore';
 
 const DIU_DOMAIN = '@diu.edu.bd';
 
@@ -23,22 +23,21 @@ function authReady(): boolean {
   return Boolean(auth);
 }
 
+async function createSessionCookie(): Promise<void> {
+  if (!authReady()) return;
+  const user = auth.currentUser;
+  if (!user) return;
+  const idToken = await user.getIdToken(true);
+  await fetch('/api/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+}
+
 // ── Google Sign-In (DIU Workspace) ─────────────────────────
 export async function signInWithGoogle(): Promise<{ success: boolean; error?: string }> {
   if (!authReady()) {
-    // ── DEMO MODE FALLBACK ──
-    if (typeof window !== 'undefined') {
-      const mockUser = {
-        uid: 'demo_student_55',
-        displayName: 'Demo DIU Student',
-        email: 'student.cse@diu.edu.bd',
-        emailVerified: true,
-      } as unknown as User;
-      localStorage.setItem('diu_mock_user', JSON.stringify(mockUser));
-      await ensureUserProfile(mockUser);
-      window.location.reload();
-      return { success: true };
-    }
     return { success: false, error: 'Firebase is not configured.' };
   }
   try {
@@ -56,6 +55,7 @@ export async function signInWithGoogle(): Promise<{ success: boolean; error?: st
 
     // Create or ensure user profile exists in Firestore
     await ensureUserProfile(user);
+    await createSessionCookie();
     return { success: true };
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };
@@ -73,22 +73,6 @@ export async function registerWithEmail(
   displayName: string
 ): Promise<{ success: boolean; error?: string }> {
   if (!authReady()) {
-    // ── DEMO MODE FALLBACK ──
-    if (typeof window !== 'undefined') {
-      if (!isDIUEmail(email)) {
-        return { success: false, error: 'Only @diu.edu.bd email addresses are allowed.' };
-      }
-      const mockUser = {
-        uid: 'demo_user_' + Math.random().toString(36).slice(2, 8),
-        displayName,
-        email,
-        emailVerified: true,
-      } as unknown as User;
-      localStorage.setItem('diu_mock_user', JSON.stringify(mockUser));
-      await ensureUserProfile(mockUser, displayName);
-      window.location.reload();
-      return { success: true };
-    }
     return { success: false, error: 'Firebase is not configured.' };
   }
   if (!isDIUEmail(email)) {
@@ -98,6 +82,7 @@ export async function registerWithEmail(
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     await sendEmailVerification(credential.user);
     await ensureUserProfile(credential.user, displayName);
+    await signOut(auth);
     return { success: true };
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };
@@ -117,42 +102,6 @@ export async function loginWithEmail(
   password: string
 ): Promise<{ success: boolean; error?: string }> {
   if (!authReady()) {
-    // ── DEMO MODE FALLBACK ──
-    if (typeof window !== 'undefined') {
-      if (!isDIUEmail(email)) {
-        return { success: false, error: 'Only @diu.edu.bd email addresses are allowed.' };
-      }
-      // Check if it's admin login for seed ease
-      const role = email.startsWith('admin') ? 'superAdmin' : 'student';
-      const mockUser = {
-        uid: 'demo_user_' + Math.random().toString(36).slice(2, 8),
-        displayName: email.split('@')[0].replace('.', ' ').toUpperCase(),
-        email,
-        emailVerified: true,
-      } as unknown as User;
-      localStorage.setItem('diu_mock_user', JSON.stringify(mockUser));
-      
-      // Ensure user profile in database
-      const existing = await getUserProfile(mockUser.uid);
-      if (!existing) {
-        await createUserProfile({
-          uid: mockUser.uid,
-          name: mockUser.displayName || 'Demo User',
-          email: mockUser.email || '',
-          studentId: '201-15-' + Math.floor(1000 + Math.random() * 9000),
-          department: 'CSE',
-          batch: '55th',
-          role: role as any,
-          favoriteTeam: '',
-          emailVerified: true,
-          votedPositions: [],
-          createdAt: Date.now(),
-        });
-      }
-      
-      window.location.reload();
-      return { success: true };
-    }
     return { success: false, error: 'Firebase is not configured.' };
   }
   if (!isDIUEmail(email)) {
@@ -161,8 +110,12 @@ export async function loginWithEmail(
   try {
     const credential = await signInWithEmailAndPassword(auth, email, password);
     if (!credential.user.emailVerified) {
+      await signOut(auth);
       return { success: false, error: 'Please verify your email first. Check your inbox.' };
     }
+    await ensureUserProfile(credential.user);
+    await updateUserProfile(credential.user.uid, { emailVerified: true });
+    await createSessionCookie();
     return { success: true };
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };
@@ -175,7 +128,7 @@ export async function loginWithEmail(
 
 // ── Resend Verification ────────────────────────────────────
 export async function resendVerification(): Promise<{ success: boolean; error?: string }> {
-  if (!authReady()) return { success: true };
+  if (!authReady()) return { success: false, error: 'Firebase is not configured.' };
   const user = auth.currentUser;
   if (!user) return { success: false, error: 'Not logged in.' };
   try {
@@ -188,30 +141,14 @@ export async function resendVerification(): Promise<{ success: boolean; error?: 
 
 // ── Sign Out ───────────────────────────────────────────────
 export async function logout(): Promise<void> {
-  if (!authReady()) {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('diu_mock_user');
-      window.location.reload();
-    }
-    return;
-  }
+  if (!authReady()) return;
+  await fetch('/api/session', { method: 'DELETE' });
   await signOut(auth);
 }
 
 // ── Auth State Observer ────────────────────────────────────
 export function onAuthChange(callback: (user: User | null) => void): () => void {
   if (!authReady()) {
-    if (typeof window !== 'undefined') {
-      const mock = localStorage.getItem('diu_mock_user');
-      if (mock) {
-        try {
-          callback(JSON.parse(mock) as User);
-          return () => {};
-        } catch {
-          // ignore
-        }
-      }
-    }
     callback(null);
     return () => {};
   }

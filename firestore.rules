@@ -60,9 +60,8 @@ service cloud.firestore {
 
     // ── VOTES ──────────────────────────────────────────────
     match /votes/{voteId} {
-      // Votes are write-only via transaction (no direct client reads of others' votes)
-      allow create: if isSignedIn() && isDIUEmail()
-                    && request.resource.data.voterUid == request.auth.uid;
+      // Votes are written by trusted server transaction only
+      allow create: if false;
       // Only admin can read all votes
       allow read: if isAdmin();
       // No updates or deletes on votes
@@ -73,8 +72,8 @@ service cloud.firestore {
     match /results/{resultId} {
       // All signed-in users can read results
       allow read: if isSignedIn();
-      // Results written only via server transaction
-      allow write: if isSignedIn() && isDIUEmail();
+      // Results written only via trusted server transaction
+      allow write: if false;
     }
 
     // ── ELECTION SETTINGS ──────────────────────────────────

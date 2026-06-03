@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useAuth } from '@/lib/context/AuthContext';
 import { getTeams, getPositions, getAllCandidates, getElectionSettings, getAllResultsForTeam } from '@/lib/firebase/firestore';
 import type { Team, Position, Candidate, ElectionSettings, ResultsDoc, CandidateWithScore } from '@/lib/types';
 import { calcPercentage, statusLabel, getTeamFlagUrl, getTeamAccentColor } from '@/lib/utils/helpers';
@@ -19,6 +20,7 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const { user, loading: authLoading } = useAuth();
 
   const fetchResults = useCallback(async (teamId: string) => {
     if (!teamId) return;
@@ -28,6 +30,7 @@ export default function ResultsPage() {
   }, []);
 
   useEffect(() => {
+    if (authLoading || !user) return;
     async function loadStatic() {
       const [t, pos, cands, s] = await Promise.all([
         getTeams(),
@@ -49,7 +52,7 @@ export default function ResultsPage() {
       setLoading(false);
     }
     loadStatic();
-  }, []);
+  }, [authLoading, user]);
 
   // Poll results every 5s
   useEffect(() => {
@@ -100,7 +103,7 @@ export default function ResultsPage() {
     return ranked;
   };
 
-  if (loading) {
+  if (loading || authLoading || !user) {
     return <div className="loading-center"><div className="spinner" /></div>;
   }
 
@@ -212,7 +215,7 @@ export default function ResultsPage() {
                     {cand.rank}
                   </div>
                   {cand.photoUrl && (
-                    <img src={cand.photoUrl} alt={cand.name} style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    <img src={cand.photoUrl} alt={cand.name} style={{ width: 40, height: 40, borderRadius: '50%', border: '1.5px solid rgba(255, 255, 255, 0.12)', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>

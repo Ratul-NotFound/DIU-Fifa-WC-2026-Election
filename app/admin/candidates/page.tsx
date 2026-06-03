@@ -156,7 +156,7 @@ export default function AdminCandidatesPage() {
                 <td data-label="Name">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                     {c.photoUrl && (
-                      <img src={c.photoUrl} alt="" style={{ width: 32, height: 32, borderRadius: 6, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      <img src={c.photoUrl} alt="" style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid rgba(255, 255, 255, 0.12)', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     )}
                     <div>
                       <p style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{c.name}</p>

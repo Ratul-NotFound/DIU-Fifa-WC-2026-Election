@@ -10,7 +10,6 @@ import {
   orderBy,
   addDoc,
   deleteDoc,
-  runTransaction,
   writeBatch,
   limit,
 } from 'firebase/firestore';
@@ -23,101 +22,12 @@ import type {
   ElectionSettings,
   ResultsDoc,
   AuditLog,
-  Vote,
 } from '@/lib/types';
 
-// Guard: return early when Firebase is not configured (build time / missing .env)
-function dbReady(): boolean {
-  return Boolean(db);
-}
-
-// ══════════════════════════════════════════════════════════
-// LOCAL STORAGE MOCK DATABASE FALLBACK (For connectionless Demo mode)
-// ══════════════════════════════════════════════════════════
-
-const MOCK_STORAGE_KEY = 'diu_fifa_mock_db_v3';
-
-interface MockDB {
-  users: Record<string, UserProfile>;
-  teams: Record<string, Team>;
-  positions: Record<string, Position>;
-  candidates: Record<string, Candidate>;
-  votes: Record<string, Vote>;
-  results: Record<string, ResultsDoc>;
-  settings: ElectionSettings;
-  logs: AuditLog[];
-}
-
-function getMockDB(): MockDB {
-  if (typeof window === 'undefined') {
-    return {
-      users: {},
-      teams: {},
-      positions: {},
-      candidates: {},
-      votes: {},
-      results: {},
-      settings: { status: 'draft', votingStart: null, votingEnd: null, updatedAt: Date.now(), updatedBy: 'system' },
-      logs: []
-    };
+function assertDb() {
+  if (!db) {
+    throw new Error('Firebase is not configured. Check your .env settings.');
   }
-  const data = localStorage.getItem(MOCK_STORAGE_KEY);
-  if (data) {
-    try {
-      return JSON.parse(data);
-    } catch {
-      // ignore
-    }
-  }
-  // Default seeding for visual testing immediately
-  const initial: MockDB = {
-    users: {},
-    teams: {
-      'mx': { id: 'mx', name: 'Mexico (Co-host)', flag: '🇲🇽', description: 'Co-host of the FIFA World Cup 2026.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'ca': { id: 'ca', name: 'Canada (Co-host)', flag: '🇨🇦', description: 'Co-host of the FIFA World Cup 2026.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'za': { id: 'za', name: 'South Africa', flag: '🇿🇦', description: '2010 FIFA World Cup hosts.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'kr': { id: 'kr', name: 'South Korea', flag: '🇰🇷', description: 'Tigers of Asia.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'py': { id: 'py', name: 'Paraguay', flag: '🇵🇾', description: 'La Albirroja.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'de': { id: 'de', name: 'Germany', flag: '🇩🇪', description: '4-time World Cup winners.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'nl': { id: 'nl', name: 'Netherlands', flag: '🇳🇱', description: 'Oranje, 3-time runners up.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'be': { id: 'be', name: 'Belgium', flag: '🇧🇪', description: 'The Red Devils.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'es': { id: 'es', name: 'Spain', flag: '🇪🇸', description: '2010 World Cup champions.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'pt': { id: 'pt', name: 'Portugal', flag: '🇵🇹', description: 'A Seleção.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'br': { id: 'br', name: 'Brazil', flag: '🇧🇷', description: '5-time World Cup champions.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'ar': { id: 'ar', name: 'Argentina', flag: '🇦🇷', description: 'Defending World Cup champions.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'fr': { id: 'fr', name: 'France', flag: '🇫🇷', description: '2-time World Cup champions.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'eng': { id: 'eng', name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', description: '1966 World Cup champions.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-      'ma': { id: 'ma', name: 'Morocco', flag: '🇲🇦', description: 'Atlas Lions, 2022 semi-finalists.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
-    },
-    positions: {
-      'leader': { id: 'leader', title: 'Team Leader', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
-      'director': { id: 'director', title: 'Technical Director', description: 'Manages tactics and strategy.', maxWinners: 1, order: 2 },
-      'striker': { id: 'striker', title: 'Lead Striker', description: 'Represents the forward line.', maxWinners: 1, order: 3 },
-      'goalkeeper': { id: 'goalkeeper', title: 'Main Goalkeeper', description: 'Represents the defensive unit.', maxWinners: 1, order: 4 },
-    },
-    candidates: {
-      'cand1': { id: 'cand1', uid: 'u1', name: 'Al-Amin Rahman', studentId: '201-15-1234', department: 'CSE', batch: '55th', team: 'br', position: 'leader', manifesto: 'Committed to organizing regular practice schedules and team team-building sessions.', photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 12, createdAt: Date.now() },
-      'cand2': { id: 'cand2', uid: 'u2', name: 'Sajid Islam', studentId: '202-16-5678', department: 'SWE', batch: '56th', team: 'br', position: 'leader', manifesto: 'Active player ready to represent CSE team interests at the high level.', photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 8, createdAt: Date.now() },
-      'cand3': { id: 'cand3', uid: 'u3', name: 'Tasnim Ahmed', studentId: '211-15-9999', department: 'CSE', batch: '57th', team: 'ar', position: 'leader', manifesto: 'Organized leader dedicated to team success and student sport integration.', photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 15, createdAt: Date.now() },
-      'cand4': { id: 'cand4', uid: 'u4', name: 'Mahim Chowdhury', studentId: '212-15-4444', department: 'EEE', batch: '54th', team: 'ar', position: 'leader', manifesto: 'Experienced goalkeeper looking to transition into a coaching/leadership role.', photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 14, createdAt: Date.now() }
-    },
-    votes: {},
-    results: {
-      'br_leader': { teamId: 'br', positionId: 'leader', candidateScores: { 'cand1': 12, 'cand2': 8 }, totalVotes: 20, updatedAt: Date.now() },
-      'ar_leader': { teamId: 'ar', positionId: 'leader', candidateScores: { 'cand3': 15, 'cand4': 14 }, totalVotes: 29, updatedAt: Date.now() }
-    },
-    settings: { status: 'live', votingStart: Date.now() - 3600000, votingEnd: Date.now() + 86400000, updatedAt: Date.now(), updatedBy: 'system' },
-    logs: [
-      { id: 'log1', adminUid: 'system', adminName: 'System', action: 'Auto-seeded demo database with 15 FIFA teams.', target: 'system', details: '', timestamp: Date.now() }
-    ]
-  };
-  localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(initial));
-  return initial;
-}
-
-function saveMockDB(dbData: MockDB) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(dbData));
 }
 
 // ══════════════════════════════════════════════════════════
@@ -125,39 +35,23 @@ function saveMockDB(dbData: MockDB) {
 // ══════════════════════════════════════════════════════════
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
-  if (!dbReady()) {
-    return getMockDB().users[uid] ?? null;
-  }
+  assertDb();
   const snap = await getDoc(doc(db, 'users', uid));
   return snap.exists() ? (snap.data() as UserProfile) : null;
 }
 
 export async function createUserProfile(profile: UserProfile): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    mock.users[profile.uid] = profile;
-    saveMockDB(mock);
-    return;
-  }
+  assertDb();
   await setDoc(doc(db, 'users', profile.uid), profile);
 }
 
 export async function updateUserProfile(uid: string, data: Partial<UserProfile>): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    if (mock.users[uid]) {
-      mock.users[uid] = { ...mock.users[uid], ...data };
-      saveMockDB(mock);
-    }
-    return;
-  }
+  assertDb();
   await updateDoc(doc(db, 'users', uid), data);
 }
 
 export async function getAllUsers(): Promise<UserProfile[]> {
-  if (!dbReady()) {
-    return Object.values(getMockDB().users);
-  }
+  assertDb();
   const snap = await getDocs(collection(db, 'users'));
   return snap.docs.map((d) => d.data() as UserProfile);
 }
@@ -167,53 +61,30 @@ export async function getAllUsers(): Promise<UserProfile[]> {
 // ══════════════════════════════════════════════════════════
 
 export async function getTeams(): Promise<Team[]> {
-  if (!dbReady()) {
-    return Object.values(getMockDB().teams).sort((a, b) => a.name.localeCompare(b.name));
-  }
+  assertDb();
   const snap = await getDocs(query(collection(db, 'teams'), orderBy('name')));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Team));
 }
 
 export async function getTeam(id: string): Promise<Team | null> {
-  if (!dbReady()) {
-    return getMockDB().teams[id] ?? null;
-  }
+  assertDb();
   const snap = await getDoc(doc(db, 'teams', id));
   return snap.exists() ? ({ id: snap.id, ...snap.data() } as Team) : null;
 }
 
 export async function createTeam(team: Omit<Team, 'id'>): Promise<string> {
-  const id = team.name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).slice(2, 6);
-  if (!dbReady()) {
-    const mock = getMockDB();
-    const newTeam: Team = { id, ...team };
-    mock.teams[id] = newTeam;
-    saveMockDB(mock);
-    return id;
-  }
+  assertDb();
   const ref = await addDoc(collection(db, 'teams'), { ...team, createdAt: Date.now() });
   return ref.id;
 }
 
 export async function updateTeam(id: string, data: Partial<Team>): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    if (mock.teams[id]) {
-      mock.teams[id] = { ...mock.teams[id], ...data };
-      saveMockDB(mock);
-    }
-    return;
-  }
+  assertDb();
   await updateDoc(doc(db, 'teams', id), data);
 }
 
 export async function deleteTeam(id: string): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    delete mock.teams[id];
-    saveMockDB(mock);
-    return;
-  }
+  assertDb();
   await deleteDoc(doc(db, 'teams', id));
 }
 
@@ -222,45 +93,24 @@ export async function deleteTeam(id: string): Promise<void> {
 // ══════════════════════════════════════════════════════════
 
 export async function getPositions(): Promise<Position[]> {
-  if (!dbReady()) {
-    return Object.values(getMockDB().positions).sort((a, b) => a.order - b.order);
-  }
+  assertDb();
   const snap = await getDocs(query(collection(db, 'positions'), orderBy('order')));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Position));
 }
 
 export async function createPosition(pos: Omit<Position, 'id'>): Promise<string> {
-  const id = pos.title.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).slice(2, 6);
-  if (!dbReady()) {
-    const mock = getMockDB();
-    const newPos = { id, ...pos };
-    mock.positions[id] = newPos;
-    saveMockDB(mock);
-    return id;
-  }
+  assertDb();
   const ref = await addDoc(collection(db, 'positions'), pos);
   return ref.id;
 }
 
 export async function updatePosition(id: string, data: Partial<Position>): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    if (mock.positions[id]) {
-      mock.positions[id] = { ...mock.positions[id], ...data };
-      saveMockDB(mock);
-    }
-    return;
-  }
+  assertDb();
   await updateDoc(doc(db, 'positions', id), data);
 }
 
 export async function deletePosition(id: string): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    delete mock.positions[id];
-    saveMockDB(mock);
-    return;
-  }
+  assertDb();
   await deleteDoc(doc(db, 'positions', id));
 }
 
@@ -269,9 +119,7 @@ export async function deletePosition(id: string): Promise<void> {
 // ══════════════════════════════════════════════════════════
 
 export async function getCandidatesByTeam(teamId: string): Promise<Candidate[]> {
-  if (!dbReady()) {
-    return Object.values(getMockDB().candidates).filter(c => c.team === teamId && c.approved);
-  }
+  assertDb();
   const q = query(
     collection(db, 'candidates'),
     where('team', '==', teamId),
@@ -282,31 +130,20 @@ export async function getCandidatesByTeam(teamId: string): Promise<Candidate[]> 
 }
 
 export async function getAllCandidates(): Promise<Candidate[]> {
-  if (!dbReady()) {
-    return Object.values(getMockDB().candidates);
-  }
+  assertDb();
   const snap = await getDocs(collection(db, 'candidates'));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Candidate));
 }
 
 export async function getPendingCandidates(): Promise<Candidate[]> {
-  if (!dbReady()) {
-    return Object.values(getMockDB().candidates).filter(c => !c.approved);
-  }
+  assertDb();
   const q = query(collection(db, 'candidates'), where('approved', '==', false));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Candidate));
 }
 
 export async function createCandidate(candidate: Omit<Candidate, 'id'>): Promise<string> {
-  const id = 'cand_' + Math.random().toString(36).slice(2, 8);
-  if (!dbReady()) {
-    const mock = getMockDB();
-    const newCand: Candidate = { id, ...candidate };
-    mock.candidates[id] = newCand;
-    saveMockDB(mock);
-    return id;
-  }
+  assertDb();
   const ref = await addDoc(collection(db, 'candidates'), {
     ...candidate,
     createdAt: Date.now(),
@@ -315,46 +152,22 @@ export async function createCandidate(candidate: Omit<Candidate, 'id'>): Promise
 }
 
 export async function approveCandidate(id: string): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    if (mock.candidates[id]) {
-      mock.candidates[id].approved = true;
-      saveMockDB(mock);
-    }
-    return;
-  }
+  assertDb();
   await updateDoc(doc(db, 'candidates', id), { approved: true });
 }
 
 export async function rejectCandidate(id: string): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    delete mock.candidates[id];
-    saveMockDB(mock);
-    return;
-  }
+  assertDb();
   await deleteDoc(doc(db, 'candidates', id));
 }
 
 export async function updateCandidate(id: string, data: Partial<Candidate>): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    if (mock.candidates[id]) {
-      mock.candidates[id] = { ...mock.candidates[id], ...data };
-      saveMockDB(mock);
-    }
-    return;
-  }
+  assertDb();
   await updateDoc(doc(db, 'candidates', id), data);
 }
 
 export async function deleteCandidate(id: string): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    delete mock.candidates[id];
-    saveMockDB(mock);
-    return;
-  }
+  assertDb();
   await deleteDoc(doc(db, 'candidates', id));
 }
 
@@ -363,9 +176,7 @@ export async function deleteCandidate(id: string): Promise<void> {
 // ══════════════════════════════════════════════════════════
 
 export async function getElectionSettings(): Promise<ElectionSettings | null> {
-  if (!dbReady()) {
-    return getMockDB().settings;
-  }
+  assertDb();
   const snap = await getDoc(doc(db, 'electionSettings', 'main'));
   return snap.exists() ? (snap.data() as ElectionSettings) : null;
 }
@@ -374,12 +185,7 @@ export async function updateElectionSettings(
   data: Partial<ElectionSettings>,
   adminUid: string
 ): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    mock.settings = { ...mock.settings, ...data, updatedAt: Date.now(), updatedBy: adminUid };
-    saveMockDB(mock);
-    return;
-  }
+  assertDb();
   await setDoc(
     doc(db, 'electionSettings', 'main'),
     { ...data, updatedAt: Date.now(), updatedBy: adminUid },
@@ -392,165 +198,40 @@ export async function updateElectionSettings(
 // ══════════════════════════════════════════════════════════
 
 export async function getResults(teamId: string, positionId: string): Promise<ResultsDoc | null> {
-  if (!dbReady()) {
-    const key = `${teamId}_${positionId}`;
-    return getMockDB().results[key] ?? null;
-  }
+  assertDb();
   const id = `${teamId}_${positionId}`;
   const snap = await getDoc(doc(db, 'results', id));
   return snap.exists() ? (snap.data() as ResultsDoc) : null;
 }
 
 export async function getAllResultsForTeam(teamId: string): Promise<ResultsDoc[]> {
-  if (!dbReady()) {
-    return Object.values(getMockDB().results).filter(r => r.teamId === teamId);
-  }
+  assertDb();
   const q = query(collection(db, 'results'), where('teamId', '==', teamId));
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as ResultsDoc);
 }
 
-export async function getUserVoteForPosition(
-  voterUid: string,
-  teamId: string,
-  positionId: string
-): Promise<string | null> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    const vote = Object.values(mock.votes).find(
-      (v) => v.voterUid === voterUid && v.team === teamId && v.position === positionId
-    );
-    return vote ? vote.candidateId : null;
-  }
-  const q = query(
-    collection(db, 'votes'),
-    where('voterUid', '==', voterUid),
-    where('team', '==', teamId),
-    where('position', '==', positionId)
-  );
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-  return snap.docs[0].data().candidateId;
-}
-
 // ══════════════════════════════════════════════════════════
-// VOTING — Transaction-safe
+// VOTING — server-only transaction
 // ══════════════════════════════════════════════════════════
 
 export async function castVote(
-  voterUid: string,
   teamId: string,
   positionId: string,
   candidateId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const voteKeyVal = `${teamId}_${positionId}`;
+  const res = await fetch('/api/vote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ teamId, positionId, candidateId }),
+  });
 
-  if (!dbReady()) {
-    const mock = getMockDB();
-    const user = mock.users[voterUid];
-    if (user && user.votedPositions?.includes(voteKeyVal)) {
-      return { success: false, error: 'You have already voted for this position.' };
-    }
-
-    // Record vote
-    const voteId = 'vote_' + Math.random().toString(36).slice(2, 8);
-    const newVote: Vote = { id: voteId, voterUid, team: teamId, position: positionId, candidateId, timestamp: Date.now() };
-    mock.votes[voteId] = newVote;
-
-    // Update candidate
-    if (mock.candidates[candidateId]) {
-      mock.candidates[candidateId].votesReceived = (mock.candidates[candidateId].votesReceived ?? 0) + 1;
-    }
-
-    // Update aggregated scores
-    if (!mock.results[voteKeyVal]) {
-      mock.results[voteKeyVal] = { teamId, positionId, candidateScores: {}, totalVotes: 0, updatedAt: Date.now() };
-    }
-    const currentScores = mock.results[voteKeyVal].candidateScores;
-    mock.results[voteKeyVal].candidateScores = {
-      ...currentScores,
-      [candidateId]: (currentScores[candidateId] ?? 0) + 1
-    };
-    mock.results[voteKeyVal].totalVotes = (mock.results[voteKeyVal].totalVotes ?? 0) + 1;
-    mock.results[voteKeyVal].updatedAt = Date.now();
-
-    // Mark user
-    if (mock.users[voterUid]) {
-      mock.users[voterUid].votedPositions = [...(mock.users[voterUid].votedPositions ?? []), voteKeyVal];
-    }
-
-    saveMockDB(mock);
-    return { success: true };
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    return { success: false, error: data.error || 'Vote failed. Please try again.' };
   }
 
-  try {
-    await runTransaction(db, async (transaction) => {
-      // 1. Read voter's current state
-      const userRef = doc(db, 'users', voterUid);
-      const userSnap = await transaction.get(userRef);
-      if (!userSnap.exists()) throw new Error('User not found.');
-
-      const userData = userSnap.data() as UserProfile;
-      if (userData.votedPositions?.includes(voteKeyVal)) {
-        throw new Error('ALREADY_VOTED');
-      }
-
-      // 2. Read results doc (or init if missing)
-      const resultsRef = doc(db, 'results', voteKeyVal);
-      const resultsSnap = await transaction.get(resultsRef);
-
-      const currentScores: Record<string, number> = resultsSnap.exists()
-        ? (resultsSnap.data()?.candidateScores ?? {})
-        : {};
-      const currentTotal: number = resultsSnap.exists()
-        ? (resultsSnap.data()?.totalVotes ?? 0)
-        : 0;
-
-      // 3. Write vote record
-      const voteRef = doc(collection(db, 'votes'));
-      transaction.set(voteRef, {
-        voterUid,
-        team: teamId,
-        position: positionId,
-        candidateId,
-        timestamp: Date.now(),
-      });
-
-      // 4. Update aggregated results (1 write)
-      transaction.set(resultsRef, {
-        teamId,
-        positionId,
-        candidateScores: {
-          ...currentScores,
-          [candidateId]: (currentScores[candidateId] ?? 0) + 1,
-        },
-        totalVotes: currentTotal + 1,
-        updatedAt: Date.now(),
-      });
-
-      // 5. Mark user as voted for this position
-      transaction.update(userRef, {
-        votedPositions: [...(userData.votedPositions ?? []), voteKeyVal],
-      });
-
-      // 6. Increment candidate vote counter
-      const candidateRef = doc(db, 'candidates', candidateId);
-      const candidateSnap = await transaction.get(candidateRef);
-      if (candidateSnap.exists()) {
-        transaction.update(candidateRef, {
-          votesReceived: (candidateSnap.data()?.votesReceived ?? 0) + 1,
-        });
-      }
-    });
-
-    return { success: true };
-  } catch (err: unknown) {
-    const error = err as Error;
-    if (error.message === 'ALREADY_VOTED') {
-      return { success: false, error: 'You have already voted for this position.' };
-    }
-    return { success: false, error: error.message || 'Vote failed. Please try again.' };
-  }
+  return { success: true };
 }
 
 // ══════════════════════════════════════════════════════════
@@ -558,20 +239,12 @@ export async function castVote(
 // ══════════════════════════════════════════════════════════
 
 export async function addAuditLog(log: Omit<AuditLog, 'id'>): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    const id = 'log_' + Math.random().toString(36).slice(2, 8);
-    mock.logs.unshift({ id, ...log });
-    saveMockDB(mock);
-    return;
-  }
+  assertDb();
   await addDoc(collection(db, 'auditLogs'), log);
 }
 
 export async function getRecentAuditLogs(count = 50): Promise<AuditLog[]> {
-  if (!dbReady()) {
-    return getMockDB().logs.slice(0, count);
-  }
+  assertDb();
   const q = query(collection(db, 'auditLogs'), orderBy('timestamp', 'desc'), limit(count));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as AuditLog));
@@ -582,14 +255,7 @@ export async function getRecentAuditLogs(count = 50): Promise<AuditLog[]> {
 // ══════════════════════════════════════════════════════════
 
 export async function batchApproveCandidates(ids: string[]): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    ids.forEach((id) => {
-      if (mock.candidates[id]) mock.candidates[id].approved = true;
-    });
-    saveMockDB(mock);
-    return;
-  }
+  assertDb();
   const batch = writeBatch(db);
   ids.forEach((id) => {
     batch.update(doc(db, 'candidates', id), { approved: true });
@@ -598,23 +264,13 @@ export async function batchApproveCandidates(ids: string[]): Promise<void> {
 }
 
 export async function setUserRole(uid: string, role: UserProfile['role']): Promise<void> {
-  if (!dbReady()) {
-    const mock = getMockDB();
-    if (mock.users[uid]) {
-      mock.users[uid].role = role;
-      saveMockDB(mock);
-    }
-    return;
-  }
+  assertDb();
   await updateDoc(doc(db, 'users', uid), { role });
 }
 
 export async function seedDefaultElectionData(): Promise<{ teamsSeeded: number; positionsSeeded: number }> {
-  if (!dbReady()) {
-    // Already pre-seeded in MockDB initialization
-    return { teamsSeeded: 15, positionsSeeded: 4 };
-  }
-  
+  assertDb();
+
   // 1. Seed Teams if empty
   const currentTeams = await getTeams();
   let teamsSeeded = 0;
@@ -633,7 +289,7 @@ export async function seedDefaultElectionData(): Promise<{ teamsSeeded: number; 
       { name: 'Brazil', flag: '🇧🇷', description: '5-time World Cup champions.' },
       { name: 'Argentina', flag: '🇦🇷', description: 'Defending World Cup champions.' },
       { name: 'France', flag: '🇫🇷', description: '2-time World Cup champions.' },
-      { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', description: '1966 World Cup champions.' },
+      { name: 'England', flag: '🏴', description: '1966 World Cup champions.' },
       { name: 'Morocco', flag: '🇲🇦', description: 'Atlas Lions, 2022 semi-finalists.' },
     ];
     for (const team of defaultTeams) {

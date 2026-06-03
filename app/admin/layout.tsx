@@ -1,8 +1,6 @@
-'use client';
-
-import { useAuth } from '@/lib/context/AuthContext';
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { redirect } from 'next/navigation';
+import { getSessionUser } from '@/lib/server/auth';
+import { fetchUserProfile } from '@/lib/server/firestore';
 import Link from 'next/link';
 import FootballLogo from '@/components/layout/FootballLogo';
 
@@ -16,22 +14,14 @@ const adminNav = [
   { href: '/admin/logs', label: '📜 Audit Logs' },
 ];
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { profile, loading } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) redirect('/login');
 
-  useEffect(() => {
-    if (!loading && (!profile || (profile.role !== 'admin' && profile.role !== 'superAdmin'))) {
-      router.replace('/dashboard');
-    }
-  }, [profile, loading, router]);
-
-  if (loading) {
-    return <div className="loading-center" style={{ minHeight: '100vh' }}><div className="spinner spinner-lg" /></div>;
+  const profile = await fetchUserProfile(sessionUser.uid);
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'superAdmin')) {
+    redirect('/dashboard');
   }
-
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'superAdmin')) return null;
 
   return (
     <div className="page-wrapper">
@@ -64,14 +54,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <aside className="admin-sidebar">
           <p className="admin-nav-section">Management</p>
           {adminNav.map(item => {
-            const active = item.exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`admin-nav-link${active ? ' active' : ''}`}
+                className="admin-nav-link"
               >
                 {item.label}
               </Link>
@@ -93,19 +80,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             paddingBottom: 'var(--space-3)',
             marginBottom: 'var(--space-4)',
           }} className="md-hidden">
-            {adminNav.map(item => {
-              const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`tab${active ? ' active' : ''}`}
-                  style={{ whiteSpace: 'nowrap', border: '1px solid var(--border)', borderBottom: active ? '2px solid var(--blue)' : undefined, borderRadius: 'var(--radius)' }}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+            {adminNav.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="tab"
+                style={{ whiteSpace: 'nowrap', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
           {children}
         </main>

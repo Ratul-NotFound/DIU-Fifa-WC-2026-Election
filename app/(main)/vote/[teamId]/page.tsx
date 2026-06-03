@@ -9,7 +9,6 @@ import {
   getCandidatesByTeam,
   getElectionSettings,
   castVote,
-  getUserVoteForPosition,
 } from '@/lib/firebase/firestore';
 import type { Team, Position, Candidate, ElectionSettings } from '@/lib/types';
 import { voteKey, truncate, getTeamFlagUrl, getTeamAccentColor } from '@/lib/utils/helpers';
@@ -18,14 +17,14 @@ export default function VotePage() {
   const params = useParams();
   const teamId = params?.teamId as string;
   const router = useRouter();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile, loading: authLoading } = useAuth();
 
   const [team, setTeam] = useState<Team | null>(null);
   const [positions, setPositions] = useState<Position[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [settings, setSettings] = useState<ElectionSettings | null>(null);
   const [activePos, setActivePos] = useState<string>('');
-  const [selected, setSelected] = useState<Record<string, string>>({}); // positionId -> candidateId
+  const [selected, setSelected] = useState<Record<string, string>>({}); // positionId -> candidateId (pending)
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -34,7 +33,7 @@ export default function VotePage() {
   const [pendingVote, setPendingVote] = useState<{ posId: string; candId: string } | null>(null);
 
   useEffect(() => {
-    if (!teamId) return;
+    if (!teamId || authLoading || !user) return;
     async function load() {
       const [t, pos, cands, s] = await Promise.all([
         getTeam(teamId),
@@ -48,21 +47,10 @@ export default function VotePage() {
       setSettings(s);
       if (pos.length > 0) setActivePos(pos[0].id);
 
-      if (user) {
-        const votesMap: Record<string, string> = {};
-        await Promise.all(
-          pos.map(async (p) => {
-            const v = await getUserVoteForPosition(user.uid, teamId, p.id);
-            if (v) votesMap[p.id] = v;
-          })
-        );
-        setSelected(votesMap);
-      }
-
       setLoading(false);
     }
     load();
-  }, [teamId, user]);
+  }, [teamId, user, authLoading]);
 
   const hasVotedFor = useCallback(
     (posId: string) => profile?.votedPositions?.includes(voteKey(teamId, posId)) ?? false,
@@ -73,6 +61,13 @@ export default function VotePage() {
 
   const handleSelect = (posId: string, candId: string) => {
     if (hasVotedFor(posId) || submitting) return;
+    setSelected(prev => ({ ...prev, [posId]: candId }));
+  };
+
+  const handleOpenConfirm = (posId: string) => {
+    if (hasVotedFor(posId) || submitting) return;
+    const candId = selected[posId];
+    if (!candId) return;
     setPendingVote({ posId, candId });
     setShowModal(true);
   };
@@ -83,12 +78,16 @@ export default function VotePage() {
     setSubmitting(true);
     setError('');
 
-    const res = await castVote(user.uid, teamId, pendingVote.posId, pendingVote.candId);
+    const res = await castVote(teamId, pendingVote.posId, pendingVote.candId);
     setSubmitting(false);
 
     if (res.success) {
       setSuccessMsg('✓ Vote cast successfully!');
-      setSelected(prev => ({ ...prev, [pendingVote.posId]: pendingVote.candId }));
+      setSelected(prev => {
+        const next = { ...prev };
+        delete next[pendingVote.posId];
+        return next;
+      });
       await refreshProfile();
       setTimeout(() => setSuccessMsg(''), 3000);
     } else {
@@ -97,7 +96,7 @@ export default function VotePage() {
     setPendingVote(null);
   };
 
-  if (loading) {
+  if (loading || authLoading || !user) {
     return <div className="loading-center"><div className="spinner" /></div>;
   }
 
@@ -222,15 +221,13 @@ export default function VotePage() {
         <div className="candidates-grid">
           {currentCandidates.map(cand => {
             const alreadyVoted = hasVotedFor(activePos);
-            const isMyVote = selected[activePos] === cand.id;
+            const isSelected = selected[activePos] === cand.id;
 
             let cardClass = 'candidate-card';
             if (alreadyVoted) {
-              if (isMyVote) {
-                cardClass += ' voted';
-              } else {
-                cardClass += ' disabled';
-              }
+              cardClass += ' disabled';
+            } else if (isSelected) {
+              cardClass += ' selected';
             }
 
             return (
@@ -270,15 +267,9 @@ export default function VotePage() {
                 
                 <div style={{ marginTop: 'var(--space-2)' }}>
                   {alreadyVoted ? (
-                    isMyVote ? (
-                      <div className="badge badge-green" style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '8px 0', fontSize: 'var(--text-xs)' }}>
-                        ✓ Locked Choice
-                      </div>
-                    ) : (
-                      <button disabled className="btn btn-ghost btn-full btn-sm">
-                        Selection Locked
-                      </button>
-                    )
+                    <button disabled className="btn btn-ghost btn-full btn-sm">
+                      Selection Locked
+                    </button>
                   ) : (
                     <button 
                       className="btn btn-primary btn-full" 
@@ -286,13 +277,34 @@ export default function VotePage() {
                       disabled={submitting}
                       id={`btn-vote-${cand.id}`}
                     >
-                      Vote for {cand.name.split(' ')[0]}
+                      {isSelected ? 'Selected' : `Select ${cand.name.split(' ')[0]}`}
                     </button>
                   )}
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {!hasVotedFor(activePos) && (
+        <div className="vote-footer">
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Selected Candidate</span>
+            <strong style={{ fontSize: 'var(--text-sm)' }}>
+              {selected[activePos]
+                ? (candidates.find(c => c.id === selected[activePos])?.name ?? '—')
+                : 'None'}
+            </strong>
+          </div>
+          <button
+            className="btn btn-green"
+            onClick={() => handleOpenConfirm(activePos)}
+            disabled={!selected[activePos] || submitting}
+            id="btn-submit-vote"
+          >
+            Submit Vote
+          </button>
         </div>
       )}
 

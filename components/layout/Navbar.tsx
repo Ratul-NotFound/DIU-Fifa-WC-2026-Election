@@ -76,9 +76,9 @@ export default function Navbar() {
 
           <div className="navbar-actions">
             {user ? (
-              <div className="avatar" title={profile?.name || user.email || ''}>
+              <Link href="/profile" className="avatar" title={profile?.name || user.email || ''} style={{ cursor: 'pointer', textDecoration: 'none' }}>
                 {initials}
-              </div>
+              </Link>
             ) : (
               <Link href="/login" className="btn btn-primary btn-sm">
                 Sign In

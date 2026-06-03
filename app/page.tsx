@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getElectionSettings } from '@/lib/firebase/firestore';
-import { getTeamFlagUrl, getTeamGradient, getTeamColors, getTeamAccentColor } from '@/lib/utils/helpers';
-import Navbar from '@/components/layout/Navbar';
+import { fetchElectionSettings } from '@/lib/server/firestore';
+import { getTeamFlagUrl, getTeamGradient, getTeamAccentColor } from '@/lib/utils/helpers';
+import NavbarServer from '@/components/layout/NavbarServer';
 import FootballLogo from '@/components/layout/FootballLogo';
 
 export const metadata: Metadata = {
@@ -10,13 +10,13 @@ export const metadata: Metadata = {
   description: 'Vote for your DIU university football committee. Official FIFA election system for Daffodil International University students.',
 };
 
-// Render at request time — election status is dynamic
-export const dynamic = 'force-dynamic';
+// SSG with light revalidation for election status
+export const revalidate = 60;
 
 export default async function LandingPage() {
   let electionStatus = 'draft';
   try {
-    const settings = await getElectionSettings();
+    const settings = await fetchElectionSettings();
     if (settings) electionStatus = settings.status;
   } catch {
     // Firestore not configured yet — show default
@@ -52,7 +52,7 @@ export default async function LandingPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
       {/* ── Global Navbar Wrapper ── */}
-      <Navbar />
+      <NavbarServer />
 
       <div className="page-wrapper">
         {/* ── Hero ── */}
