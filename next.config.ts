@@ -1,7 +1,19 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'i.imgur.com' },
+      { protocol: 'https', hostname: 'ibb.co' },
+      { protocol: 'https', hostname: 'imgbb.com' },
+      { protocol: 'https', hostname: '**.imgbb.com' },
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' }, // Google profile photos
+      { protocol: 'https', hostname: '**.githubusercontent.com' },
+    ],
+  },
+  // Reduce bundle size
+  poweredByHeader: false,
+  compress: true,
 };
 
 export default nextConfig;

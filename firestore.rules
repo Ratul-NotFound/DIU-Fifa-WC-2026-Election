@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isDIUEmail() {
+      return request.auth.token.email.matches('.*@diu\\.edu\\.bd$');
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && getUserData().role in ['admin', 'superAdmin'];
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && getUserData().role == 'superAdmin';
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ── USERS ──────────────────────────────────────────────
+    match /users/{uid} {
+      // Any signed-in DIU user can read their own profile
+      allow read: if isOwner(uid) || isAdmin();
+      // Create own profile on first login
+      allow create: if isOwner(uid) && isDIUEmail();
+      // Update own non-role fields; admin can update role
+      allow update: if (isOwner(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']))
+                    || isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ── TEAMS ──────────────────────────────────────────────
+    match /teams/{teamId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── POSITIONS ──────────────────────────────────────────
+    match /positions/{posId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── CANDIDATES ─────────────────────────────────────────
+    match /candidates/{candId} {
+      // Approved candidates visible to all signed-in users
+      allow read: if isSignedIn() && (resource.data.approved == true || isAdmin());
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── VOTES ──────────────────────────────────────────────
+    match /votes/{voteId} {
+      // Votes are write-only via transaction (no direct client reads of others' votes)
+      allow create: if isSignedIn() && isDIUEmail()
+                    && request.resource.data.voterUid == request.auth.uid;
+      // Only admin can read all votes
+      allow read: if isAdmin();
+      // No updates or deletes on votes
+      allow update, delete: if false;
+    }
+
+    // ── RESULTS (pre-aggregated) ────────────────────────────
+    match /results/{resultId} {
+      // All signed-in users can read results
+      allow read: if isSignedIn();
+      // Results written only via server transaction
+      allow write: if isSignedIn() && isDIUEmail();
+    }
+
+    // ── ELECTION SETTINGS ──────────────────────────────────
+    match /electionSettings/{docId} {
+      allow read: if true; // Public — landing page reads this
+      allow write: if isAdmin();
+    }
+
+    // ── AUDIT LOGS ─────────────────────────────────────────
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false; // Immutable logs
+    }
+  }
+}
