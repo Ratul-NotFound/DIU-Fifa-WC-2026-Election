@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getTeams, getElectionSettings, getAllResultsForTeam } from '@/lib/firebase/firestore';
 import type { Team, ElectionSettings, ResultsDoc } from '@/lib/types';
-import { statusLabel, getTeamFlagUrl, getTeamAccentColor } from '@/lib/utils/helpers';
+import { statusLabel, getTeamFlagUrl, getTeamAccentColor, getTeamGradient } from '@/lib/utils/helpers';
 
 export default function DashboardPage() {
   const { profile } = useAuth();
@@ -120,19 +120,21 @@ export default function DashboardPage() {
               key={team.id}
               href={isLive ? `/vote/${team.id}` : `/results?team=${team.id}`}
               className="team-card"
-              style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+              style={{ 
+                '--team-accent': getTeamAccentColor(team.name),
+                '--team-accent-glow': getTeamAccentColor(team.name) + '25',
+              } as React.CSSProperties}
             >
               {/* Colored top brand strip */}
-              <div style={{ height: '4px', width: '100%', background: getTeamAccentColor(team.name) }} />
+              <div style={{ height: '4px', width: '100%', background: getTeamGradient(team.name) }} />
 
-              <div className="team-card-flag" style={{ padding: 'var(--space-2)' }}>
+              <div className="team-card-flag">
                 <img 
                   src={getTeamFlagUrl(team.flag)} 
                   alt={team.name}
-                  style={{ width: '64px', height: 'auto', borderRadius: '4px', boxShadow: '0 3px 8px rgba(0, 0, 0, 0.4)' }}
                 />
               </div>
-              <div className="team-card-body" style={{ background: 'rgba(11, 17, 36, 0.4)' }}>
+              <div className="team-card-body">
                 <p className="team-card-name">{team.name}</p>
                 {hasVoted && (
                   <span className="badge badge-green" style={{ marginTop: 'var(--space-2)', fontSize: '10px' }}>

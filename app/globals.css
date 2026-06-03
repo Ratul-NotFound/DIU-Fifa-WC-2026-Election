@@ -98,9 +98,9 @@
   --shadow:    0 4px 12px rgba(0,0,0,0.5);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.6);
 
-  /* Transitions (max 200ms per spec) */
+  /* Transitions (max 150ms per spec) */
   --transition: 150ms ease;
-  --transition-md: 200ms ease;
+  --transition-md: 150ms ease;
 
   /* Layout */
   --nav-height:     60px;
@@ -126,6 +126,42 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  position: relative;
+}
+
+/* Stadium lights glow (subtle blue/purple overlay) */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 700px;
+  background: 
+    radial-gradient(circle at 50% -100px, rgba(59, 130, 246, 0.16) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(6, 9, 19, 0) 100%),
+    radial-gradient(circle at 10% 300px, rgba(6, 182, 212, 0.04) 0%, rgba(6, 9, 19, 0) 60%),
+    radial-gradient(circle at 90% 300px, rgba(139, 92, 246, 0.04) 0%, rgba(6, 9, 19, 0) 60%);
+  pointer-events: none;
+  z-index: -2;
+}
+
+/* Football pitch grid lines & tactical map (subtle transparent overlay) */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.005) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.005) 1px, transparent 1px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1000' height='1000' viewBox='0 0 1000 1000' opacity='0.012'%3E%3Cpath d='M0 500h1000M500 0v1000M500 500m-120 0a120 120 0 1 0 240 0a120 120 0 1 0 -240 0M500 500m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0' fill='none' stroke='%23ffffff' stroke-width='2'/%3E%3Crect x='0' y='320' width='120' height='360' fill='none' stroke='%23ffffff' stroke-width='2'/%3E%3Crect x='880' y='320' width='120' height='360' fill='none' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M120 400a100 100 0 0 1 0 200M880 400a100 100 0 0 0 0 200' fill='none' stroke='%23ffffff' stroke-width='2'/%3E%3C/svg%3E");
+  background-size: 80px 80px, 80px 80px, 800px 800px;
+  background-position: center center, center center, center center;
+  background-repeat: repeat, repeat, repeat;
+  pointer-events: none;
+  z-index: -1;
 }
 
 a {
@@ -244,7 +280,7 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   font-weight: 600;
   border-radius: var(--radius);
   border: 1px solid transparent;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition) cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   cursor: pointer;
   text-decoration: none;
@@ -547,17 +583,30 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 /* ── Navbar ── */
 .navbar {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
+  top: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - var(--space-8));
+  max-width: var(--container-max);
+  z-index: 1000;
   height: var(--nav-height);
-  background: rgba(3, 5, 12, 0.82);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  background: rgba(11, 17, 36, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: all var(--transition);
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    top: var(--space-2);
+    width: calc(100% - var(--space-4));
+    border-radius: var(--radius-lg);
+  }
 }
 
 .navbar-inner {
@@ -565,9 +614,7 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: var(--container-max);
-  margin: 0 auto;
-  padding: 0 var(--space-4);
+  padding: 0 var(--space-5);
   gap: var(--space-4);
 }
 
@@ -583,26 +630,18 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 }
 
 .navbar-brand-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius);
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  overflow: hidden;
-}
-
-.navbar-brand-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 .navbar-links {
   display: none;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
 }
 
 @media (min-width: 768px) {
@@ -612,19 +651,26 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 }
 
 .navbar-link {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
   font-size: var(--text-sm);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
-  transition: color var(--transition), background var(--transition);
+  transition: all var(--transition);
   text-decoration: none;
+  border: 1px solid transparent;
 }
 
-.navbar-link:hover,
-.navbar-link.active {
+.navbar-link:hover {
   color: var(--text-primary);
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.navbar-link.active {
+  color: #ffffff;
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
 }
 
 .navbar-actions {
@@ -740,10 +786,16 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   border-top: 1px solid var(--border);
 }
 
-/* ── Page Wrapper (accounts for fixed nav) ── */
+/* ── Page Wrapper (accounts for floating capsule nav) ── */
 .page-wrapper {
   min-height: 100vh;
-  padding-top: var(--nav-height);
+  padding-top: calc(var(--nav-height) + var(--space-8));
+}
+
+@media (max-width: 640px) {
+  .page-wrapper {
+    padding-top: calc(var(--nav-height) + var(--space-4));
+  }
 }
 
 /* ── Admin Sidebar Layout ── */
@@ -884,12 +936,12 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 
 /* ── Team Card ── */
 .team-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(16, 25, 53, 0.6) 0%, rgba(8, 14, 30, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   text-decoration: none;
-  transition: border-color var(--transition-md), transform var(--transition-md), box-shadow var(--transition-md);
+  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -898,28 +950,43 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 }
 
 .team-card:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  border-color: var(--team-accent, rgba(255, 255, 255, 0.2));
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 15px var(--team-accent-glow, rgba(59, 130, 246, 0));
 }
 
 .team-card-flag {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100px;
-  background: rgba(8, 16, 36, 0.4);
-  border-bottom: 1px solid var(--border-light);
-  transition: transform var(--transition-md);
+  height: 120px;
+  background-image: 
+    radial-gradient(circle, rgba(16, 25, 53, 0.2) 0%, rgba(6, 9, 19, 0.8) 100%),
+    url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=300&q=50');
+  background-size: cover;
+  background-position: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
 }
 
-.team-card:hover .team-card-flag {
-  transform: scale(1.05);
+.team-card-flag img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radius-full);
+  border: 2.5px solid var(--team-accent, rgba(255, 255, 255, 0.15));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), 0 0 12px var(--team-accent-glow, rgba(255, 255, 255, 0));
+  transition: transform var(--transition);
+}
+
+.team-card:hover .team-card-flag img {
+  transform: scale(1.1) rotate(2deg);
 }
 
 .team-card-body {
-  padding: var(--space-3) var(--space-4);
-  background: rgba(14, 26, 53, 0.4);
+  padding: var(--space-4) var(--space-3);
+  background: rgba(10, 16, 32, 0.45);
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -932,7 +999,8 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   font-weight: 700;
   font-size: var(--text-sm);
   color: var(--text-primary);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 /* ── Candidate Cards (Voting) ── */
@@ -1313,14 +1381,161 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 .hero {
   position: relative;
   padding: var(--space-20) var(--space-4) var(--space-16);
-  text-align: center;
-  background-image: linear-gradient(rgba(6, 9, 19, 0.7), rgba(6, 9, 19, 0.95)), url('/fifa_hero_banner.png');
+  background-image: linear-gradient(rgba(6, 9, 19, 0.72), rgba(6, 9, 19, 0.94)), url('/fifa_hero_banner.png');
   background-size: cover;
   background-position: center;
   border-bottom: 1px solid var(--border);
   width: 100vw;
   margin-left: calc(-50vw + 50%);
   margin-right: calc(-50vw + 50%);
+  display: flex;
+  align-items: center;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-10);
+  align-items: center;
+  width: 100%;
+}
+
+@media (min-width: 992px) {
+  .hero-grid {
+    grid-template-columns: 1.2fr 0.8fr;
+    text-align: left;
+  }
+  .hero-content {
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+}
+
+/* ── FUT Sports Cards ── */
+.hero-visuals {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: 320px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.fut-card {
+  width: 190px;
+  height: 270px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.82) 0%, rgba(15, 23, 42, 0.96) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+  transition: all var(--transition);
+  user-select: none;
+}
+
+/* Brazil themed FUT card */
+.fut-card.brazil {
+  transform: rotate(-6deg) translateX(-40px);
+  border-color: #ffd100;
+  box-shadow: 0 10px 30px rgba(0, 151, 57, 0.15), 0 15px 35px rgba(0,0,0,0.6);
+  z-index: 2;
+}
+
+/* Argentina themed FUT card */
+.fut-card.argentina {
+  transform: rotate(6deg) translateX(40px);
+  border-color: #75aadb;
+  box-shadow: 0 10px 30px rgba(117, 170, 219, 0.15), 0 15px 35px rgba(0,0,0,0.6);
+  z-index: 3;
+}
+
+.hero-visuals:hover .fut-card.brazil {
+  transform: rotate(-10deg) translateX(-55px) scale(1.02);
+}
+
+.hero-visuals:hover .fut-card.argentina {
+  transform: rotate(10deg) translateX(55px) scale(1.02);
+}
+
+.fut-card-badge {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-2);
+}
+
+.fut-card-rating {
+  font-weight: 800;
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.fut-card-position {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.fut-card-flag {
+  width: 24px;
+  height: auto;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.fut-card-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  text-align: center;
+}
+
+.fut-card-avatar {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: var(--space-2);
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+}
+
+.fut-card-name {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.fut-card-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 50%, transparent);
+  margin-bottom: var(--space-3);
+}
+
+.fut-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.fut-stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 var(--space-1);
+}
+
+.fut-stat-value {
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .hero-content {
@@ -1383,7 +1598,11 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   align-items: center;
   justify-content: center;
   padding: var(--space-6) var(--space-4);
-  background: var(--bg-primary);
+  background-image: 
+    linear-gradient(rgba(3, 5, 12, 0.8), rgba(3, 5, 12, 0.95)), 
+    url('https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1200&q=80');
+  background-size: cover;
+  background-position: center;
 }
 
 .auth-card {

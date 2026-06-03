@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getElectionSettings } from '@/lib/firebase/firestore';
-import { getTeamFlagUrl } from '@/lib/utils/helpers';
+import { getTeamFlagUrl, getTeamGradient, getTeamColors, getTeamAccentColor } from '@/lib/utils/helpers';
 import Navbar from '@/components/layout/Navbar';
+import FootballLogo from '@/components/layout/FootballLogo';
 
 export const metadata: Metadata = {
   title: 'DIU FIFA World Cup Election Platform',
@@ -53,36 +54,103 @@ export default async function LandingPage() {
       {/* ── Global Navbar Wrapper ── */}
       <Navbar />
 
-      <div className="page-wrapper" style={{ paddingTop: 'var(--nav-height)' }}>
+      <div className="page-wrapper">
         {/* ── Hero ── */}
-        <section className="hero" style={{ 
-          marginTop: 0,
-        }}>
-          <div className="hero-content">
-            {electionStatus === 'live' && (
-              <div className="live-dot" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', padding: '6px 14px', borderRadius: '99px' }}>
-                <span className="live-dot-pulse" style={{ display: 'inline-block', width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', marginRight: '8px', animation: 'pulse 1.5s infinite' }} />
-                Voting is Live Now
+        {/* ── Hero ── */}
+        <section className="hero" style={{ marginTop: 0 }}>
+          <div className="container">
+            <div className="hero-grid">
+              
+              {/* Left Column: Info & CTAs */}
+              <div className="hero-content">
+                {electionStatus === 'live' && (
+                  <div className="live-dot" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', padding: '6px 14px', borderRadius: '99px' }}>
+                    <span className="live-dot-pulse" style={{ display: 'inline-block', width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', marginRight: '8px', animation: 'pulse 1.5s infinite' }} />
+                    Voting is Live Now
+                  </div>
+                )}
+                <div className="hero-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <span style={{ width: '22px', height: '22px', display: 'inline-block' }}>
+                    <FootballLogo />
+                  </span>
+                  <span>DIU FIFA WORLD CUP ELECTION 2026</span>
+                </div>
+                <h1 className="hero-title" style={{ maxWidth: '680px' }}>
+                  Vote for Your University&apos;s Football Committee
+                </h1>
+                <p className="hero-sub" style={{ maxWidth: '600px', marginBottom: 'var(--space-6)' }}>
+                  Elect student representatives for {teams.length} FIFA World Cup national teams.
+                  Only verified Daffodil International University students can vote.
+                </p>
+                <div className="hero-actions">
+                  <Link href="/login" className="btn btn-primary btn-lg">
+                    Sign In to Vote
+                  </Link>
+                  <Link href="/results" className="btn btn-ghost btn-lg" style={{ background: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                    View Results
+                  </Link>
+                </div>
               </div>
-            )}
-            <div className="hero-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/2026_FIFA_World_Cup_emblem.svg" alt="FIFA 2026" style={{ height: '22px', width: 'auto' }} />
-              <span>DIU FIFA WORLD CUP ELECTION 2026</span>
-            </div>
-            <h1 className="hero-title" style={{ maxWidth: '680px' }}>
-              Vote for Your University&apos;s Football Committee
-            </h1>
-            <p className="hero-sub" style={{ maxWidth: '600px' }}>
-              Elect student representatives for {teams.length} FIFA World Cup national teams.
-              Only verified Daffodil International University students can vote.
-            </p>
-            <div className="hero-actions">
-              <Link href="/login" className="btn btn-primary btn-lg">
-                Sign In to Vote
-              </Link>
-              <Link href="/results" className="btn btn-ghost btn-lg" style={{ background: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                View Results
-              </Link>
+
+              {/* Right Column: FUT Showcase Cards */}
+              <div className="hero-visuals">
+                {/* Brazil Card */}
+                <div className="fut-card brazil">
+                  <div className="fut-card-badge">
+                    <div>
+                      <div className="fut-card-rating">95</div>
+                      <div className="fut-card-position">LDR</div>
+                    </div>
+                    <img src="https://flagcdn.com/w80/br.png" alt="Brazil" className="fut-card-flag" />
+                  </div>
+                  <div className="fut-card-player">
+                    <img 
+                      src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=120&h=120&q=80" 
+                      alt="A. Rahman" 
+                      style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ffd100', marginBottom: 'var(--space-2)' }} 
+                    />
+                    <div className="fut-card-name">A. RAHMAN</div>
+                  </div>
+                  <div className="fut-card-divider"></div>
+                  <div className="fut-card-stats">
+                    <div className="fut-stat-item"><span>VOT</span><span className="fut-stat-value">95</span></div>
+                    <div className="fut-stat-item"><span>PAC</span><span className="fut-stat-value">94</span></div>
+                    <div className="fut-stat-item"><span>PAS</span><span className="fut-stat-value">90</span></div>
+                    <div className="fut-stat-item"><span>DRI</span><span className="fut-stat-value">91</span></div>
+                    <div className="fut-stat-item"><span>DEF</span><span className="fut-stat-value">85</span></div>
+                    <div className="fut-stat-item"><span>PHY</span><span className="fut-stat-value">88</span></div>
+                  </div>
+                </div>
+
+                {/* Argentina Card */}
+                <div className="fut-card argentina">
+                  <div className="fut-card-badge">
+                    <div>
+                      <div className="fut-card-rating">98</div>
+                      <div className="fut-card-position">LDR</div>
+                    </div>
+                    <img src="https://flagcdn.com/w80/ar.png" alt="Argentina" className="fut-card-flag" />
+                  </div>
+                  <div className="fut-card-player">
+                    <img 
+                      src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&h=120&q=80" 
+                      alt="T. Ahmed" 
+                      style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #75aadb', marginBottom: 'var(--space-2)' }} 
+                    />
+                    <div className="fut-card-name">T. AHMED</div>
+                  </div>
+                  <div className="fut-card-divider"></div>
+                  <div className="fut-card-stats">
+                    <div className="fut-stat-item"><span>VOT</span><span className="fut-stat-value">98</span></div>
+                    <div className="fut-stat-item"><span>PAC</span><span className="fut-stat-value">92</span></div>
+                    <div className="fut-stat-item"><span>PAS</span><span className="fut-stat-value">96</span></div>
+                    <div className="fut-stat-item"><span>DRI</span><span className="fut-stat-value">95</span></div>
+                    <div className="fut-stat-item"><span>DEF</span><span className="fut-stat-value">82</span></div>
+                    <div className="fut-stat-item"><span>PHY</span><span className="fut-stat-value">84</span></div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
@@ -102,33 +170,24 @@ export default async function LandingPage() {
                   key={team.name} 
                   className="team-card"
                   style={{ 
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
+                    '--team-accent': getTeamAccentColor(team.name),
+                    '--team-accent-glow': getTeamAccentColor(team.name) + '25',
+                  } as React.CSSProperties}
                 >
                   {/* Colored top brand strip */}
-                  <div style={{ height: '4px', width: '100%', background: team.bgColor }} />
+                  <div style={{ height: '4px', width: '100%', background: getTeamGradient(team.name) }} />
                   
-                  <div 
-                    className="team-card-flag" 
-                    style={{ 
-                      background: 'rgba(8, 16, 36, 0.35)', 
-                      height: '110px',
-                      borderBottom: '1px solid var(--border)'
-                    }}
-                  >
+                  <div className="team-card-flag">
                     <img 
                       src={getTeamFlagUrl(team.flag)} 
                       alt={team.name}
-                      style={{ width: '64px', height: 'auto', borderRadius: '4px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.4)' }}
                     />
                   </div>
-                  <div className="team-card-body" style={{ background: 'rgba(11, 17, 36, 0.4)', padding: 'var(--space-4) var(--space-3)' }}>
-                    <p className="team-card-name" style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>
+                  <div className="team-card-body">
+                    <p className="team-card-name">
                       {team.name}
                     </p>
-                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', opacity: 0.8 }}>
+                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', opacity: 0.8 }}>
                       {team.region}
                     </p>
                   </div>
@@ -185,7 +244,9 @@ export default async function LandingPage() {
           <div style={{ 
             maxWidth: 600, 
             margin: '0 auto',
-            background: 'var(--bg-card)',
+            backgroundImage: "linear-gradient(rgba(16, 25, 53, 0.85), rgba(16, 25, 53, 0.95)), url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
             padding: 'var(--space-10) var(--space-8)',
             borderRadius: 'var(--radius-xl)',
             border: '2px solid var(--fifa-purple)',

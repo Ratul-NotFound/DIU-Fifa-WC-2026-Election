@@ -228,35 +228,63 @@ export default function VotePage() {
             }
 
             return (
-              <button
+              <div
                 key={cand.id}
                 className={cardClass}
-                onClick={() => !alreadyVoted && handleSelect(activePos, cand.id)}
-                style={{ textAlign: 'left', width: '100%' }}
-                disabled={alreadyVoted || submitting}
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between',
+                  padding: 'var(--space-5)',
+                  minHeight: '230px'
+                }}
                 id={`cand-${cand.id}`}
               >
-                <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start' }}>
-                  {cand.photoUrl ? (
-                    <img src={cand.photoUrl} alt={cand.name} className="candidate-photo" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                  ) : (
-                    <div className="candidate-photo-placeholder">👤</div>
-                  )}
-                  <div className="candidate-info">
-                    <p className="candidate-name">{cand.name}</p>
-                    <p className="candidate-meta">{cand.department} · {cand.batch}</p>
-                    {cand.studentId && (
-                      <p className="candidate-meta" style={{ marginTop: 2 }}>ID: {cand.studentId}</p>
+                <div>
+                  <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'flex-start', marginBottom: 'var(--space-3)' }}>
+                    {cand.photoUrl ? (
+                      <img src={cand.photoUrl} alt={cand.name} className="candidate-photo" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    ) : (
+                      <div className="candidate-photo-placeholder">👤</div>
                     )}
+                    <div className="candidate-info">
+                      <p className="candidate-name" style={{ fontWeight: 700, fontSize: 'var(--text-base)' }}>{cand.name}</p>
+                      <p className="candidate-meta">{cand.department} · {cand.batch}</p>
+                      {cand.studentId && (
+                        <p className="candidate-meta" style={{ marginTop: 2 }}>ID: {cand.studentId}</p>
+                      )}
+                    </div>
                   </div>
+                  {cand.manifesto && (
+                    <p className="candidate-manifesto" style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                      {truncate(cand.manifesto, 150)}
+                    </p>
+                  )}
                 </div>
-                {cand.manifesto && (
-                  <p className="candidate-manifesto">{truncate(cand.manifesto, 120)}</p>
-                )}
-                {alreadyVoted && isMyVote && (
-                  <span className="badge badge-green" style={{ marginTop: 'var(--space-2)' }}>✓ Voted by You</span>
-                )}
-              </button>
+                
+                <div style={{ marginTop: 'var(--space-2)' }}>
+                  {alreadyVoted ? (
+                    isMyVote ? (
+                      <div className="badge badge-green" style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '8px 0', fontSize: 'var(--text-xs)' }}>
+                        ✓ Locked Choice
+                      </div>
+                    ) : (
+                      <button disabled className="btn btn-ghost btn-full btn-sm">
+                        Selection Locked
+                      </button>
+                    )
+                  ) : (
+                    <button 
+                      className="btn btn-primary btn-full" 
+                      onClick={() => handleSelect(activePos, cand.id)}
+                      disabled={submitting}
+                      id={`btn-vote-${cand.id}`}
+                    >
+                      Vote for {cand.name.split(' ')[0]}
+                    </button>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>

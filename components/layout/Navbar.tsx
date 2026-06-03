@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { logout } from '@/lib/firebase/auth';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import FootballLogo from './FootballLogo';
 
 const navLinks = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -36,7 +37,7 @@ export default function Navbar() {
         <div className="navbar-inner">
           <Link href={user ? "/dashboard" : "/"} className="navbar-brand">
             <span className="navbar-brand-icon">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/2026_FIFA_World_Cup_emblem.svg" alt="FIFA 2026 Logo" />
+              <FootballLogo />
             </span>
             <span>DIU FIFA</span>
           </Link>
@@ -106,7 +107,7 @@ export default function Navbar() {
         <div className="drawer-header">
           <span className="navbar-brand" style={{ fontSize: 'var(--text-sm)' }}>
             <span className="navbar-brand-icon">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/2026_FIFA_World_Cup_emblem.svg" alt="FIFA 2026 Logo" />
+              <FootballLogo />
             </span>
             DIU FIFA
           </span>

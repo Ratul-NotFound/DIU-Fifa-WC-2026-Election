@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import FootballLogo from '@/components/layout/FootballLogo';
 
 const adminNav = [
   { href: '/admin', label: '📊 Overview', exact: true },
@@ -44,7 +45,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }}>
         <div className="navbar-inner">
           <Link href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontWeight: 700, fontSize: 'var(--text-base)', color: 'var(--text-primary)', textDecoration: 'none' }}>
-            <span className="navbar-brand-icon">⚽</span>
+            <span className="navbar-brand-icon" style={{ width: '24px', height: '24px' }}>
+              <FootballLogo />
+            </span>
             <span>DIU FIFA <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>· Admin</span></span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>

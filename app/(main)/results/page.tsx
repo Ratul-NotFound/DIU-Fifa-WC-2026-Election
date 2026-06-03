@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { getTeams, getPositions, getAllCandidates, getElectionSettings, getAllResultsForTeam } from '@/lib/firebase/firestore';
 import type { Team, Position, Candidate, ElectionSettings, ResultsDoc, CandidateWithScore } from '@/lib/types';
-import { calcPercentage, statusLabel, getTeamFlagUrl } from '@/lib/utils/helpers';
+import { calcPercentage, statusLabel, getTeamFlagUrl, getTeamAccentColor } from '@/lib/utils/helpers';
 import Link from 'next/link';
 
 const POLL_INTERVAL = 5000; // 5 seconds
@@ -135,21 +135,27 @@ export default function ResultsPage() {
 
       {/* Team Tabs */}
       <div className="team-tabs">
-        {teams.map(t => (
-          <button
-            key={t.id}
-            className={`team-tab-pill${selectedTeam === t.id ? ' active' : ''}`}
-            onClick={() => handleTeamChange(t.id)}
-            id={`results-team-${t.id}`}
-          >
-            <img 
-              src={getTeamFlagUrl(t.flag)} 
-              alt={t.name}
-              style={{ width: '18px', height: 'auto', borderRadius: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
-            />
-            <span>{t.name}</span>
-          </button>
-        ))}
+        {teams.map(t => {
+          const isActive = selectedTeam === t.id;
+          return (
+            <button
+              key={t.id}
+              className={`team-tab-pill${isActive ? ' active' : ''}`}
+              onClick={() => handleTeamChange(t.id)}
+              id={`results-team-${t.id}`}
+              style={{
+                borderBottom: isActive ? `3px solid ${getTeamAccentColor(t.name)}` : undefined
+              }}
+            >
+              <img 
+                src={getTeamFlagUrl(t.flag)} 
+                alt={t.name}
+                style={{ width: '18px', height: 'auto', borderRadius: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
+              />
+              <span>{t.name}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Position Tabs */}

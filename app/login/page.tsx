@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signInWithGoogle, loginWithEmail, registerWithEmail, resendVerification } from '@/lib/firebase/auth';
+import FootballLogo from '@/components/layout/FootballLogo';
 
 type Mode = 'login' | 'register' | 'verify';
 
@@ -70,9 +71,9 @@ export default function LoginPage() {
     <div className="auth-page">
       <div className="auth-card">
         {/* Logo */}
-        <div className="auth-logo">
-          <div className="auth-logo-icon" style={{ background: 'transparent', border: 'none', height: '64px', width: 'auto', marginBottom: 'var(--space-2)' }}>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/2026_FIFA_World_Cup_emblem.svg" alt="FIFA 2026 Logo" style={{ height: '100%', width: 'auto', objectFit: 'contain' }} />
+        <div className="auth-logo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="auth-logo-icon" style={{ background: 'transparent', border: 'none', height: '64px', width: '64px', marginBottom: 'var(--space-2)' }}>
+            <FootballLogo />
           </div>
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 'var(--space-2)' }}>
             DIU FIFA Election Platform

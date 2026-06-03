@@ -35,7 +35,7 @@ function dbReady(): boolean {
 // LOCAL STORAGE MOCK DATABASE FALLBACK (For connectionless Demo mode)
 // ══════════════════════════════════════════════════════════
 
-const MOCK_STORAGE_KEY = 'diu_fifa_mock_db_v2';
+const MOCK_STORAGE_KEY = 'diu_fifa_mock_db_v3';
 
 interface MockDB {
   users: Record<string, UserProfile>;
@@ -73,21 +73,21 @@ function getMockDB(): MockDB {
   const initial: MockDB = {
     users: {},
     teams: {
-      'mx': { id: 'mx', name: 'Mexico (Co-host)', flag: '🇲🇽', description: 'Co-host of the FIFA World Cup 2026.', logo: '', banner: '', createdAt: Date.now() },
-      'ca': { id: 'ca', name: 'Canada (Co-host)', flag: '🇨🇦', description: 'Co-host of the FIFA World Cup 2026.', logo: '', banner: '', createdAt: Date.now() },
-      'za': { id: 'za', name: 'South Africa', flag: '🇿🇦', description: '2010 FIFA World Cup hosts.', logo: '', banner: '', createdAt: Date.now() },
-      'kr': { id: 'kr', name: 'South Korea', flag: '🇰🇷', description: 'Tigers of Asia.', logo: '', banner: '', createdAt: Date.now() },
-      'py': { id: 'py', name: 'Paraguay', flag: '🇵🇾', description: 'La Albirroja.', logo: '', banner: '', createdAt: Date.now() },
-      'de': { id: 'de', name: 'Germany', flag: '🇩🇪', description: '4-time World Cup winners.', logo: '', banner: '', createdAt: Date.now() },
-      'nl': { id: 'nl', name: 'Netherlands', flag: '🇳🇱', description: 'Oranje, 3-time runners up.', logo: '', banner: '', createdAt: Date.now() },
-      'be': { id: 'be', name: 'Belgium', flag: '🇧🇪', description: 'The Red Devils.', logo: '', banner: '', createdAt: Date.now() },
-      'es': { id: 'es', name: 'Spain', flag: '🇪🇸', description: '2010 World Cup champions.', logo: '', banner: '', createdAt: Date.now() },
-      'pt': { id: 'pt', name: 'Portugal', flag: '🇵🇹', description: 'A Seleção.', logo: '', banner: '', createdAt: Date.now() },
-      'br': { id: 'br', name: 'Brazil', flag: '🇧🇷', description: '5-time World Cup champions.', logo: '', banner: '', createdAt: Date.now() },
-      'ar': { id: 'ar', name: 'Argentina', flag: '🇦🇷', description: 'Defending World Cup champions.', logo: '', banner: '', createdAt: Date.now() },
-      'fr': { id: 'fr', name: 'France', flag: '🇫🇷', description: '2-time World Cup champions.', logo: '', banner: '', createdAt: Date.now() },
-      'eng': { id: 'eng', name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', description: '1966 World Cup champions.', logo: '', banner: '', createdAt: Date.now() },
-      'ma': { id: 'ma', name: 'Morocco', flag: '🇲🇦', description: 'Atlas Lions, 2022 semi-finalists.', logo: '', banner: '', createdAt: Date.now() },
+      'mx': { id: 'mx', name: 'Mexico (Co-host)', flag: '🇲🇽', description: 'Co-host of the FIFA World Cup 2026.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'ca': { id: 'ca', name: 'Canada (Co-host)', flag: '🇨🇦', description: 'Co-host of the FIFA World Cup 2026.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'za': { id: 'za', name: 'South Africa', flag: '🇿🇦', description: '2010 FIFA World Cup hosts.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'kr': { id: 'kr', name: 'South Korea', flag: '🇰🇷', description: 'Tigers of Asia.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'py': { id: 'py', name: 'Paraguay', flag: '🇵🇾', description: 'La Albirroja.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'de': { id: 'de', name: 'Germany', flag: '🇩🇪', description: '4-time World Cup winners.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'nl': { id: 'nl', name: 'Netherlands', flag: '🇳🇱', description: 'Oranje, 3-time runners up.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'be': { id: 'be', name: 'Belgium', flag: '🇧🇪', description: 'The Red Devils.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'es': { id: 'es', name: 'Spain', flag: '🇪🇸', description: '2010 World Cup champions.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'pt': { id: 'pt', name: 'Portugal', flag: '🇵🇹', description: 'A Seleção.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'br': { id: 'br', name: 'Brazil', flag: '🇧🇷', description: '5-time World Cup champions.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'ar': { id: 'ar', name: 'Argentina', flag: '🇦🇷', description: 'Defending World Cup champions.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'fr': { id: 'fr', name: 'France', flag: '🇫🇷', description: '2-time World Cup champions.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'eng': { id: 'eng', name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', description: '1966 World Cup champions.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
+      'ma': { id: 'ma', name: 'Morocco', flag: '🇲🇦', description: 'Atlas Lions, 2022 semi-finalists.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
     },
     positions: {
       'leader': { id: 'leader', title: 'Team Leader', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
@@ -96,10 +96,10 @@ function getMockDB(): MockDB {
       'goalkeeper': { id: 'goalkeeper', title: 'Main Goalkeeper', description: 'Represents the defensive unit.', maxWinners: 1, order: 4 },
     },
     candidates: {
-      'cand1': { id: 'cand1', uid: 'u1', name: 'Al-Amin Rahman', studentId: '201-15-1234', department: 'CSE', batch: '55th', team: 'br', position: 'leader', manifesto: 'Committed to organizing regular practice schedules and team team-building sessions.', photoUrl: '', approved: true, votesReceived: 12, createdAt: Date.now() },
-      'cand2': { id: 'cand2', uid: 'u2', name: 'Sajid Islam', studentId: '202-16-5678', department: 'SWE', batch: '56th', team: 'br', position: 'leader', manifesto: 'Active player ready to represent CSE team interests at the high level.', photoUrl: '', approved: true, votesReceived: 8, createdAt: Date.now() },
-      'cand3': { id: 'cand3', uid: 'u3', name: 'Tasnim Ahmed', studentId: '211-15-9999', department: 'CSE', batch: '57th', team: 'ar', position: 'leader', manifesto: 'Organized leader dedicated to team success and student sport integration.', photoUrl: '', approved: true, votesReceived: 15, createdAt: Date.now() },
-      'cand4': { id: 'cand4', uid: 'u4', name: 'Mahim Chowdhury', studentId: '212-15-4444', department: 'EEE', batch: '54th', team: 'ar', position: 'leader', manifesto: 'Experienced goalkeeper looking to transition into a coaching/leadership role.', photoUrl: '', approved: true, votesReceived: 14, createdAt: Date.now() }
+      'cand1': { id: 'cand1', uid: 'u1', name: 'Al-Amin Rahman', studentId: '201-15-1234', department: 'CSE', batch: '55th', team: 'br', position: 'leader', manifesto: 'Committed to organizing regular practice schedules and team team-building sessions.', photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 12, createdAt: Date.now() },
+      'cand2': { id: 'cand2', uid: 'u2', name: 'Sajid Islam', studentId: '202-16-5678', department: 'SWE', batch: '56th', team: 'br', position: 'leader', manifesto: 'Active player ready to represent CSE team interests at the high level.', photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 8, createdAt: Date.now() },
+      'cand3': { id: 'cand3', uid: 'u3', name: 'Tasnim Ahmed', studentId: '211-15-9999', department: 'CSE', batch: '57th', team: 'ar', position: 'leader', manifesto: 'Organized leader dedicated to team success and student sport integration.', photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 15, createdAt: Date.now() },
+      'cand4': { id: 'cand4', uid: 'u4', name: 'Mahim Chowdhury', studentId: '212-15-4444', department: 'EEE', batch: '54th', team: 'ar', position: 'leader', manifesto: 'Experienced goalkeeper looking to transition into a coaching/leadership role.', photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 14, createdAt: Date.now() }
     },
     votes: {},
     results: {
