@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { updateUserProfile } from '@/lib/firebase/firestore';
 
 export default function ProfilePage() {
-  const { profile, refreshProfile } = useAuth();
+  const { profile, user, refreshProfile } = useAuth();
   const [form, setForm] = useState({ name: '', studentId: '', department: '', batch: '' });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
@@ -48,7 +48,11 @@ export default function ProfilePage() {
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
           <div className="avatar" style={{ width: 56, height: 56, fontSize: 'var(--text-xl)' }}>
-            {profile.name?.[0]?.toUpperCase() ?? '?'}
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt="Profile" />
+            ) : (
+              profile.name?.[0]?.toUpperCase() ?? '?'
+            )}
           </div>
           <div>
             <p style={{ fontWeight: 600, fontSize: 'var(--text-base)' }}>{profile.name || 'Student'}</p>
@@ -65,8 +69,8 @@ export default function ProfilePage() {
             <input id="pf-name" type="text" className="form-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
           </div>
           <div className="form-group">
-            <label className="form-label" htmlFor="pf-sid">Student ID</label>
-            <input id="pf-sid" type="text" className="form-input" placeholder="e.g. 221-15-0000" value={form.studentId} onChange={e => setForm(f => ({ ...f, studentId: e.target.value }))} />
+            <label className="form-label" htmlFor="pf-sid">Student ID (Locked)</label>
+            <input id="pf-sid" type="text" className="form-input" value={form.studentId} disabled style={{ opacity: 0.7, cursor: 'not-allowed' }} />
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="pf-dept">Department</label>

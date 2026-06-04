@@ -49,7 +49,7 @@ export default function AdminOverview() {
         teams: teams.length,
         positions: positions.length,
         users: users.length,
-        totalVotes: 0,
+        totalVotes: users.reduce((sum, u) => sum + (u.votedPositions?.length ?? 0), 0),
       });
       setSettings(s);
       setRecentLogs(logs);
@@ -117,6 +117,10 @@ export default function AdminOverview() {
         <div className="stat-card">
           <p className="stat-label">Registered Voters</p>
           <p className="stat-value">{stats.users}</p>
+        </div>
+        <div className="stat-card">
+          <p className="stat-label">Total Votes Cast</p>
+          <p className="stat-value">{stats.totalVotes}</p>
         </div>
       </div>
 

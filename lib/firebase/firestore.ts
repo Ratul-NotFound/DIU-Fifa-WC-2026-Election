@@ -17,6 +17,7 @@ import {
 import { db } from './config';
 import type {
   UserProfile,
+  UserRole,
   Team,
   Position,
   Candidate,
@@ -90,21 +91,21 @@ function getMockDB(): MockDB {
       'ma': { id: 'ma', name: 'Morocco', flag: '🇲🇦', description: 'Atlas Lions, 2022 semi-finalists.', logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=150&q=80', banner: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80', createdAt: Date.now() },
     },
     positions: {
-      'leader': { id: 'leader', title: 'Team Leader', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
-      'director': { id: 'director', title: 'Technical Director', description: 'Manages tactics and strategy.', maxWinners: 1, order: 2 },
-      'striker': { id: 'striker', title: 'Lead Striker', description: 'Represents the forward line.', maxWinners: 1, order: 3 },
-      'goalkeeper': { id: 'goalkeeper', title: 'Main Goalkeeper', description: 'Represents the defensive unit.', maxWinners: 1, order: 4 },
+      'president': { id: 'president', title: 'President', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
+      'vp': { id: 'vp', title: 'Vice President', description: 'Supports the President and manages operations.', maxWinners: 1, order: 2 },
+      'secretary': { id: 'secretary', title: 'General Secretary', description: 'Manages correspondence and documentation.', maxWinners: 1, order: 3 },
+      'organizing': { id: 'organizing', title: 'Organizing Secretary', description: 'Coordinates events and logistics.', maxWinners: 1, order: 4 },
     },
     candidates: {
-      'cand1': { id: 'cand1', uid: 'u1', name: 'Al-Amin Rahman', studentId: '201-15-1234', department: 'CSE', batch: '55th', team: 'br', position: 'leader', manifesto: 'Committed to organizing regular practice schedules and team team-building sessions.', photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 12, createdAt: Date.now() },
-      'cand2': { id: 'cand2', uid: 'u2', name: 'Sajid Islam', studentId: '202-16-5678', department: 'SWE', batch: '56th', team: 'br', position: 'leader', manifesto: 'Active player ready to represent CSE team interests at the high level.', photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 8, createdAt: Date.now() },
-      'cand3': { id: 'cand3', uid: 'u3', name: 'Tasnim Ahmed', studentId: '211-15-9999', department: 'CSE', batch: '57th', team: 'ar', position: 'leader', manifesto: 'Organized leader dedicated to team success and student sport integration.', photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 15, createdAt: Date.now() },
-      'cand4': { id: 'cand4', uid: 'u4', name: 'Mahim Chowdhury', studentId: '212-15-4444', department: 'EEE', batch: '54th', team: 'ar', position: 'leader', manifesto: 'Experienced goalkeeper looking to transition into a coaching/leadership role.', photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 14, createdAt: Date.now() }
+      'cand1': { id: 'cand1', uid: 'u1', name: 'Al-Amin Rahman', studentId: '201-15-1234', department: 'CSE', batch: '55th', team: 'br', position: 'president', manifesto: 'Committed to organizing regular schedules and student team-building sessions.', photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 12, createdAt: Date.now() },
+      'cand2': { id: 'cand2', uid: 'u2', name: 'Sajid Islam', studentId: '202-16-5678', department: 'SWE', batch: '56th', team: 'br', position: 'president', manifesto: 'Active student leader ready to represent SWE team interests at the university level.', photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 8, createdAt: Date.now() },
+      'cand3': { id: 'cand3', uid: 'u3', name: 'Tasnim Ahmed', studentId: '211-15-9999', department: 'CSE', batch: '57th', team: 'ar', position: 'president', manifesto: 'Organized student dedicated to team success and student sport integration.', photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 15, createdAt: Date.now() },
+      'cand4': { id: 'cand4', uid: 'u4', name: 'Mahim Chowdhury', studentId: '212-15-4444', department: 'EEE', batch: '54th', team: 'ar', position: 'president', manifesto: 'Experienced student leader looking to transition committee into winning ways.', photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 14, createdAt: Date.now() }
     },
     votes: {},
     results: {
-      'br_leader': { teamId: 'br', positionId: 'leader', candidateScores: { 'cand1': 12, 'cand2': 8 }, totalVotes: 20, updatedAt: Date.now() },
-      'ar_leader': { teamId: 'ar', positionId: 'leader', candidateScores: { 'cand3': 15, 'cand4': 14 }, totalVotes: 29, updatedAt: Date.now() }
+      'br_president': { teamId: 'br', positionId: 'president', candidateScores: { 'cand1': 12, 'cand2': 8 }, totalVotes: 20, updatedAt: Date.now() },
+      'ar_president': { teamId: 'ar', positionId: 'president', candidateScores: { 'cand3': 15, 'cand4': 14 }, totalVotes: 29, updatedAt: Date.now() }
     },
     settings: { status: 'live', votingStart: Date.now() - 3600000, votingEnd: Date.now() + 86400000, updatedAt: Date.now(), updatedBy: 'system' },
     logs: [
@@ -139,7 +140,18 @@ export async function createUserProfile(profile: UserProfile): Promise<void> {
     saveMockDB(mock);
     return;
   }
-  await setDoc(doc(db, 'users', profile.uid), profile);
+  let finalRole = profile.role;
+  if (profile.email) {
+    try {
+      const roleDoc = await getDoc(doc(db, 'preassignedRoles', profile.email.toLowerCase()));
+      if (roleDoc.exists()) {
+        finalRole = roleDoc.data().role;
+      }
+    } catch (err) {
+      console.error("Error reading preassigned roles:", err);
+    }
+  }
+  await setDoc(doc(db, 'users', profile.uid), { ...profile, role: finalRole });
 }
 
 export async function updateUserProfile(uid: string, data: Partial<UserProfile>): Promise<void> {
@@ -289,6 +301,15 @@ export async function getAllCandidates(): Promise<Candidate[]> {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Candidate));
 }
 
+export async function getApprovedCandidates(): Promise<Candidate[]> {
+  if (!dbReady()) {
+    return Object.values(getMockDB().candidates).filter(c => c.approved);
+  }
+  const q = query(collection(db, 'candidates'), where('approved', '==', true));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Candidate));
+}
+
 export async function getPendingCandidates(): Promise<Candidate[]> {
   if (!dbReady()) {
     return Object.values(getMockDB().candidates).filter(c => !c.approved);
@@ -410,6 +431,53 @@ export async function getAllResultsForTeam(teamId: string): Promise<ResultsDoc[]
   return snap.docs.map((d) => d.data() as ResultsDoc);
 }
 
+export async function getLiveTeamStandings(): Promise<{ teamId: string; teamName: string; flag: string; votes: number }[]> {
+  const teams = await getTeams();
+  
+  if (!dbReady()) {
+    const mock = getMockDB();
+    const teamVotes: Record<string, number> = {};
+    Object.values(mock.results).forEach(r => {
+      teamVotes[r.teamId] = (teamVotes[r.teamId] ?? 0) + r.totalVotes;
+    });
+    return teams
+      .map(t => ({
+        teamId: t.id,
+        teamName: t.name,
+        flag: t.flag,
+        votes: teamVotes[t.id] ?? 0,
+      }))
+      .sort((a, b) => b.votes - a.votes)
+      .slice(0, 4);
+  }
+
+  try {
+    const snap = await getDocs(collection(db, 'results'));
+    const teamVotes: Record<string, number> = {};
+    snap.docs.forEach(d => {
+      const data = d.data() as ResultsDoc;
+      const teamId = data.teamId;
+      const totalVotes = data.totalVotes ?? 0;
+      if (teamId) {
+        teamVotes[teamId] = (teamVotes[teamId] ?? 0) + totalVotes;
+      }
+    });
+
+    return teams
+      .map(t => ({
+        teamId: t.id,
+        teamName: t.name,
+        flag: t.flag,
+        votes: teamVotes[t.id] ?? 0,
+      }))
+      .sort((a, b) => b.votes - a.votes)
+      .slice(0, 4);
+  } catch (err) {
+    console.error("Error fetching live standings:", err);
+    return [];
+  }
+}
+
 export async function getUserVoteForPosition(
   voterUid: string,
   teamId: string,
@@ -422,15 +490,10 @@ export async function getUserVoteForPosition(
     );
     return vote ? vote.candidateId : null;
   }
-  const q = query(
-    collection(db, 'votes'),
-    where('voterUid', '==', voterUid),
-    where('team', '==', teamId),
-    where('position', '==', positionId)
-  );
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-  return snap.docs[0].data().candidateId;
+  const voteDocId = `${voterUid}_${teamId}_${positionId}`;
+  const snap = await getDoc(doc(db, 'votes', voteDocId));
+  if (!snap.exists()) return null;
+  return snap.data().candidateId;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -453,7 +516,7 @@ export async function castVote(
     }
 
     // Record vote
-    const voteId = 'vote_' + Math.random().toString(36).slice(2, 8);
+    const voteId = `${voterUid}_${teamId}_${positionId}`;
     const newVote: Vote = { id: voteId, voterUid, team: teamId, position: positionId, candidateId, timestamp: Date.now() };
     mock.votes[voteId] = newVote;
 
@@ -506,8 +569,9 @@ export async function castVote(
         ? (resultsSnap.data()?.totalVotes ?? 0)
         : 0;
 
-      // 3. Write vote record
-      const voteRef = doc(collection(db, 'votes'));
+      // 3. Write vote record (deterministic ID)
+      const voteDocId = `${voterUid}_${teamId}_${positionId}`;
+      const voteRef = doc(db, 'votes', voteDocId);
       transaction.set(voteRef, {
         voterUid,
         team: teamId,
@@ -647,10 +711,10 @@ export async function seedDefaultElectionData(): Promise<{ teamsSeeded: number; 
   let positionsSeeded = 0;
   if (currentPositions.length === 0) {
     const defaultPositions = [
-      { title: 'Team Leader', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
-      { title: 'Technical Director', description: 'Manages tactics and strategy.', maxWinners: 1, order: 2 },
-      { title: 'Lead Striker', description: 'Represents the forward line.', maxWinners: 1, order: 3 },
-      { title: 'Main Goalkeeper', description: 'Represents the defensive unit.', maxWinners: 1, order: 4 },
+      { title: 'President', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
+      { title: 'Vice President', description: 'Supports the President and manages operations.', maxWinners: 1, order: 2 },
+      { title: 'General Secretary', description: 'Manages correspondence and documentation.', maxWinners: 1, order: 3 },
+      { title: 'Organizing Secretary', description: 'Coordinates events and logistics.', maxWinners: 1, order: 4 },
     ];
     for (const pos of defaultPositions) {
       await createPosition(pos);
@@ -659,4 +723,50 @@ export async function seedDefaultElectionData(): Promise<{ teamsSeeded: number; 
   }
 
   return { teamsSeeded, positionsSeeded };
+}
+
+export async function promoteUserByEmail(email: string, role: UserRole): Promise<{ success: boolean; message: string }> {
+  if (!dbReady()) {
+    const mock = getMockDB();
+    const existing = Object.values(mock.users).find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (existing) {
+      existing.role = role;
+      saveMockDB(mock);
+      return { success: true, message: `✓ ${existing.name} has been promoted to ${role}.` };
+    }
+    // Preassign mock (dummy user)
+    const mockUid = 'mock_' + Math.random().toString(36).slice(2, 8);
+    mock.users[mockUid] = {
+      uid: mockUid,
+      name: 'Preassigned Admin',
+      email: email.toLowerCase(),
+      studentId: '',
+      department: '',
+      batch: '',
+      role,
+      favoriteTeam: '',
+      emailVerified: true,
+      votedPositions: [],
+      createdAt: Date.now(),
+    };
+    saveMockDB(mock);
+    return { success: true, message: `✓ Email ${email} has been pre-assigned as ${role}.` };
+  }
+
+  // 1. Check if user already exists
+  const q = query(collection(db, 'users'), where('email', '==', email.toLowerCase()));
+  const snap = await getDocs(q);
+  if (!snap.empty) {
+    const userDoc = snap.docs[0];
+    await updateDoc(doc(db, 'users', userDoc.id), { role });
+    return { success: true, message: `✓ ${userDoc.data().name || email} has been promoted to ${role}.` };
+  }
+
+  // 2. Pre-assign role for future login
+  await setDoc(doc(db, 'preassignedRoles', email.toLowerCase()), {
+    email: email.toLowerCase(),
+    role,
+    createdAt: Date.now(),
+  });
+  return { success: true, message: `✓ Email ${email} has been pre-assigned as ${role}.` };
 }

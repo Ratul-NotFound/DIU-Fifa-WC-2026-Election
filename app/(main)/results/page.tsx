@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { getTeams, getPositions, getAllCandidates, getElectionSettings, getAllResultsForTeam } from '@/lib/firebase/firestore';
+import { getTeams, getPositions, getApprovedCandidates, getElectionSettings, getAllResultsForTeam } from '@/lib/firebase/firestore';
 import type { Team, Position, Candidate, ElectionSettings, ResultsDoc, CandidateWithScore } from '@/lib/types';
 import { calcPercentage, statusLabel, getTeamFlagUrl, getTeamAccentColor } from '@/lib/utils/helpers';
 import Link from 'next/link';
@@ -32,12 +32,12 @@ export default function ResultsPage() {
       const [t, pos, cands, s] = await Promise.all([
         getTeams(),
         getPositions(),
-        getAllCandidates(),
+        getApprovedCandidates(),
         getElectionSettings(),
       ]);
       setTeams(t);
       setPositions(pos);
-      setCandidates(cands.filter(c => c.approved));
+      setCandidates(cands);
       setSettings(s);
       if (t.length > 0) {
         setSelectedTeam(t[0].id);
@@ -151,8 +151,8 @@ export default function ResultsPage() {
                 boxShadow: isActive ? `0 0 10px ${accentColor}33` : undefined,
               } as React.CSSProperties}
             >
-              <img 
-                src={getTeamFlagUrl(t.flag)} 
+              <img
+                src={getTeamFlagUrl(t.flag)}
                 alt={t.name}
                 className="flag-circular"
                 style={{ width: '18px', height: '18px' }}

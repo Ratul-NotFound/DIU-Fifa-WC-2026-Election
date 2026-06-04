@@ -50,6 +50,21 @@ export function statusLabel(status: string): string {
   return map[status] ?? status;
 }
 
+/** Convert regional indicator flag emojis to a 2-letter ISO country code */
+export function emojiToCountryCode(emoji: string): string | null {
+  const clean = emoji.trim();
+  // Support custom subdivision emojis like England
+  if (clean === '🏴󠁧󠁢󠁥󠁮󠁧󠁿') return 'gb-eng';
+  if (clean === '🏴󠁧󠁢󠁳󠁣󠁴󠁿') return 'gb-sct';
+  if (clean === '🏴󠁧󠁢󠁷󠁬󠁳󠁿') return 'gb-wls';
+
+  const codePoints = Array.from(clean).map(char => char.codePointAt(0));
+  if (codePoints.length === 2 && codePoints.every(cp => cp && cp >= 0x1F1E6 && cp <= 0x1F1FF)) {
+    return codePoints.map(cp => String.fromCharCode(cp! - 0x1F1E6 + 97)).join('');
+  }
+  return null;
+}
+
 /** Return the country flag image URL from flagcdn */
 export function getTeamFlagUrl(flag: string): string {
   if (!flag) return 'https://flagcdn.com/w160/un.png';
@@ -59,23 +74,21 @@ export function getTeamFlagUrl(flag: string): string {
     return flag;
   }
   
-  // Clean emoji or shortcode
   const clean = flag.trim();
   
-  // Map emoji flags or names to codes
+  // Convert any flag emoji to its 2-letter code if possible
+  const emojiCode = emojiToCountryCode(clean);
+  if (emojiCode) {
+    return `https://flagcdn.com/w160/${emojiCode}.png`;
+  }
+  
+  // Map names/codes
   const map: Record<string, string> = {
-    // Emojis
-    '🇲🇽': 'mx', '🇨🇦': 'ca', '🇿🇦': 'za', '🇰🇷': 'kr', '🇵🇾': 'py',
-    '🇩🇪': 'de', '🇳🇱': 'nl', '🇧🇪': 'be', '🇪🇸': 'es', '🇵🇹': 'pt',
-    '🇧🇷': 'br', '🇦🇷': 'ar', '🇫🇷': 'fr', '🏴󠁧󠁢󠁥󠁮󠁧󠁿': 'gb-eng', '🇲🇦': 'ma',
-    // Lowercase names
     'mexico': 'mx', 'canada': 'ca', 'south africa': 'za', 'south korea': 'kr',
     'paraguay': 'py', 'germany': 'de', 'netherlands': 'nl', 'belgium': 'be',
     'spain': 'es', 'portugal': 'pt', 'brazil': 'br', 'argentina': 'ar',
     'france': 'fr', 'england': 'gb-eng', 'morocco': 'ma'
   };
-  
-  if (map[clean]) return `https://flagcdn.com/w160/${map[clean]}.png`;
   
   const code = clean.toLowerCase();
   if (map[code]) return `https://flagcdn.com/w160/${map[code]}.png`;
@@ -161,4 +174,11 @@ export function getTeamColors(name: string): { primary: string; secondary: strin
   const clean = name.toLowerCase().replace(/\s*\(co-host\)/gi, '').trim();
   const res = map[clean] ?? { secondary: '#1d4ed8', text: '#ffffff' };
   return { primary, ...res };
+}
+
+/** Format a timestamp (ms) to YYYY-MM-DDThh:mm format in local timezone */
+export function formatLocalDatetime(ts: number): string {
+  const date = new Date(ts);
+  const tzOffset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
 }

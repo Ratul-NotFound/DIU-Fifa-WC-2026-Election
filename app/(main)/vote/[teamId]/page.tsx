@@ -65,8 +65,8 @@ export default function VotePage() {
   }, [teamId, user]);
 
   const hasVotedFor = useCallback(
-    (posId: string) => profile?.votedPositions?.includes(voteKey(teamId, posId)) ?? false,
-    [profile, teamId]
+    (posId: string) => !!selected[posId],
+    [selected]
   );
 
   const currentCandidates = candidates.filter(c => c.position === activePos);
@@ -101,20 +101,12 @@ export default function VotePage() {
     return <div className="loading-center"><div className="spinner" /></div>;
   }
 
-  if (!settings || settings.status !== 'live') {
+  if (!settings) {
     return (
       <div className="page-content">
         <div className="empty-state">
-          <span className="empty-icon">🗳️</span>
-          <p className="empty-title">Voting is Not Open</p>
-          <p className="empty-desc">
-            {settings?.status === 'draft' && 'The election has not started yet.'}
-            {settings?.status === 'counting' && 'Voting is closed. Results are being counted.'}
-            {settings?.status === 'finished' && 'The election has ended. View the results!'}
-          </p>
-          {settings?.status === 'finished' && (
-            <a href="/results" className="btn btn-primary" style={{ marginTop: 'var(--space-4)' }}>View Results</a>
-          )}
+          <span className="empty-icon">⚙</span>
+          <p className="empty-title">Loading Settings…</p>
         </div>
       </div>
     );
@@ -138,6 +130,22 @@ export default function VotePage() {
 
   return (
     <div className="page-content" style={{ paddingBottom: '100px' }}>
+      {/* ── Election Status Warning Banners ── */}
+      {settings.status === 'draft' && (
+        <div className="alert alert-warning" style={{ marginBottom: 'var(--space-4)' }}>
+          🗳️ <strong>Preview Mode:</strong> The election has not started yet. Review the candidates and position manifestos below.
+        </div>
+      )}
+      {settings.status === 'counting' && (
+        <div className="alert alert-warning" style={{ marginBottom: 'var(--space-4)' }}>
+          🔢 <strong>Voting Closed:</strong> Votes are being counted. Candidates and manifestos are view-only.
+        </div>
+      )}
+      {settings.status === 'finished' && (
+        <div className="alert alert-success" style={{ marginBottom: 'var(--space-4)' }}>
+          🏆 <strong>Election Finished:</strong> The election has ended. <a href="/results" style={{ textDecoration: 'underline', fontWeight: 600, color: 'inherit' }}>View final standings →</a>
+        </div>
+      )}
       {/* ── Team Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-6)' }}>
         <button
@@ -269,7 +277,11 @@ export default function VotePage() {
                 </div>
                 
                 <div style={{ marginTop: 'var(--space-2)' }}>
-                  {alreadyVoted ? (
+                  {settings.status !== 'live' ? (
+                    <button disabled className="btn btn-ghost btn-full btn-sm" style={{ opacity: 0.6 }}>
+                      {settings.status === 'draft' ? 'Voting Not Open' : 'Voting Closed'}
+                    </button>
+                  ) : alreadyVoted ? (
                     isMyVote ? (
                       <div className="badge badge-green" style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '8px 0', fontSize: 'var(--text-xs)' }}>
                         ✓ Locked Choice

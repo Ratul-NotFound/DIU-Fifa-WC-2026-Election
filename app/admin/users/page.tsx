@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getAllUsers, setUserRole, addAuditLog } from '@/lib/firebase/firestore';
+import { getAllUsers, setUserRole, addAuditLog, promoteUserByEmail } from '@/lib/firebase/firestore';
 import { useAuth } from '@/lib/context/AuthContext';
 import type { UserProfile, UserRole } from '@/lib/types';
 
@@ -11,6 +11,29 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
   const [search, setSearch] = useState('');
+  const [promoteEmail, setPromoteEmail] = useState('');
+  const [promoting, setPromoting] = useState(false);
+
+  const handlePromoteByEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile || profile.role !== 'superAdmin') return;
+    const emailLower = promoteEmail.trim().toLowerCase();
+    if (!emailLower.endsWith('@diu.edu.bd')) {
+      alert('Only @diu.edu.bd emails are allowed.');
+      return;
+    }
+    setPromoting(true);
+    try {
+      const res = await promoteUserByEmail(emailLower, 'admin');
+      showMsg(res.message);
+      setPromoteEmail('');
+      await reload();
+    } catch (err: any) {
+      alert(err.message || 'Promotion failed.');
+    } finally {
+      setPromoting(false);
+    }
+  };
 
   const reload = async () => {
     const u = await getAllUsers();
@@ -45,6 +68,27 @@ export default function AdminUsersPage() {
       <div className="section-header">
         <div><h1>Users</h1><p className="section-sub">{users.length} registered voters</p></div>
       </div>
+
+      {profile?.role === 'superAdmin' && (
+        <div className="card" style={{ marginBottom: 'var(--space-6)', maxWidth: 480 }}>
+          <h3 className="card-title" style={{ marginBottom: 'var(--space-3)', fontSize: 'var(--text-base)' }}>Promote Admin by Email</h3>
+          <form onSubmit={handlePromoteByEmail} style={{ display: 'flex', gap: 'var(--space-3)' }}>
+            <input
+              type="email"
+              className="form-input"
+              placeholder="e.g. username@diu.edu.bd"
+              value={promoteEmail}
+              onChange={e => setPromoteEmail(e.target.value)}
+              required
+              id="promote-email-input"
+              style={{ minHeight: 38 }}
+            />
+            <button type="submit" className="btn btn-primary" disabled={promoting} style={{ flexShrink: 0, minHeight: 38 }}>
+              {promoting ? 'Promoting…' : 'Add Admin'}
+            </button>
+          </form>
+        </div>
+      )}
 
       {msg && <div className="alert alert-success" style={{ marginBottom: 'var(--space-4)' }}>{msg}</div>}
 
@@ -89,7 +133,7 @@ export default function AdminUsersPage() {
                   <span className={`badge ${roleBadge(u.role)}`} style={{ textTransform: 'capitalize' }}>{u.role}</span>
                 </td>
                 <td data-label="Actions">
-                  {u.uid !== profile?.uid && (
+                  {profile?.role === 'superAdmin' && u.uid !== profile?.uid ? (
                     <select
                       className="form-select"
                       style={{ minHeight: 32, padding: '0 var(--space-3)', fontSize: 'var(--text-xs)', width: 'auto' }}
@@ -102,6 +146,8 @@ export default function AdminUsersPage() {
                       <option value="admin">Admin</option>
                       <option value="superAdmin">Super Admin</option>
                     </select>
+                  ) : (
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>—</span>
                   )}
                 </td>
               </tr>

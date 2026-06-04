@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getElectionSettings } from '@/lib/firebase/firestore';
-import { getTeamFlagUrl, getTeamGradient, getTeamColors, getTeamAccentColor } from '@/lib/utils/helpers';
+import { getElectionSettings, getTeams, getLiveTeamStandings } from '@/lib/firebase/firestore';
+import { getTeamFlagUrl, getTeamGradient, getTeamAccentColor } from '@/lib/utils/helpers';
 import Navbar from '@/components/layout/Navbar';
 import FootballLogo from '@/components/layout/FootballLogo';
 
@@ -15,11 +15,20 @@ export const dynamic = 'force-dynamic';
 
 export default async function LandingPage() {
   let electionStatus = 'draft';
+  let dbTeams: any[] = [];
+  let standings: any[] = [];
+
   try {
-    const settings = await getElectionSettings();
+    const [settings, fetchedTeams, fetchedStandings] = await Promise.all([
+      getElectionSettings(),
+      getTeams(),
+      getLiveTeamStandings(),
+    ]);
     if (settings) electionStatus = settings.status;
-  } catch {
-    // Firestore not configured yet — show default
+    dbTeams = fetchedTeams;
+    standings = fetchedStandings;
+  } catch (err) {
+    console.error("Firestore read error:", err);
   }
 
   const features = [
@@ -31,23 +40,7 @@ export default async function LandingPage() {
     { icon: '🏆', title: 'FIFA Inspired', desc: 'Professional scoreboard-style election dashboard.' },
   ];
 
-  const teams = [
-    { name: 'Mexico (Co-host)', flag: '🇲🇽', bgColor: '#1b4332', textColor: '#ffffff', region: 'CONCACAF · Co-host' },
-    { name: 'Canada (Co-host)', flag: '🇨🇦', bgColor: '#c8102e', textColor: '#ffffff', region: 'CONCACAF · Co-host' },
-    { name: 'South Africa', flag: '🇿🇦', bgColor: '#007a4d', textColor: '#ffffff', region: 'CAF · Former Host' },
-    { name: 'South Korea', flag: '🇰🇷', bgColor: '#0f2042', textColor: '#ffffff', region: 'AFC · Tigers of Asia' },
-    { name: 'Paraguay', flag: '🇵🇾', bgColor: '#0038a8', textColor: '#ffffff', region: 'CONMEBOL · La Albirroja' },
-    { name: 'Germany', flag: '🇩🇪', bgColor: '#111111', textColor: '#ffffff', region: 'UEFA · 4-Time Champ' },
-    { name: 'Netherlands', flag: '🇳🇱', bgColor: '#ff4f00', textColor: '#ffffff', region: 'UEFA · Oranje' },
-    { name: 'Belgium', flag: '🇧🇪', bgColor: '#2d2d2d', textColor: '#ffffff', region: 'UEFA · Red Devils' },
-    { name: 'Spain', flag: '🇪🇸', bgColor: '#ad1519', textColor: '#ffffff', region: 'UEFA · 2010 Champ' },
-    { name: 'Portugal', flag: '🇵🇹', bgColor: '#7f0e1c', textColor: '#ffffff', region: 'UEFA · A Seleção' },
-    { name: 'Brazil', flag: '🇧🇷', bgColor: '#009739', textColor: '#ffffff', region: 'CONMEBOL · 5-Time Champ' },
-    { name: 'Argentina', flag: '🇦🇷', bgColor: '#75aadb', textColor: '#ffffff', region: 'CONMEBOL · Defending Champ' },
-    { name: 'France', flag: '🇫🇷', bgColor: '#002395', textColor: '#ffffff', region: 'UEFA · 2-Time Champ' },
-    { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', bgColor: '#ffffff', textColor: '#ffffff', region: 'UEFA · Three Lions' },
-    { name: 'Morocco', flag: '🇲🇦', bgColor: '#c1272d', textColor: '#ffffff', region: 'CAF · Atlas Lions' },
-  ];
+  const totalVotersCount = standings.reduce((sum, s) => sum + s.votes, 0);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
@@ -78,7 +71,7 @@ export default async function LandingPage() {
                   Vote for Your University&apos;s Football Committee
                 </h1>
                 <p className="hero-sub" style={{ maxWidth: '600px', marginBottom: 'var(--space-6)' }}>
-                  Elect student representatives for {teams.length} FIFA World Cup national teams.
+                  Elect student representatives for {dbTeams.length} FIFA World Cup national teams.
                   Only verified Daffodil International University students can vote.
                 </p>
                 <div className="hero-actions">
@@ -95,48 +88,51 @@ export default async function LandingPage() {
               <div className="hero-scoreboard">
                 <div className="scoreboard-title">DIU Live Standings</div>
                 
-                <div className="scoreboard-row" style={{ borderLeft: '3.5px solid #75aadb', paddingLeft: 'var(--space-2)', background: 'rgba(117, 170, 219, 0.04)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: '#75aadb', width: '20px' }}>1ST</div>
-                  <div className="scoreboard-team" style={{ flex: 1 }}>
-                    <img src="https://flagcdn.com/w80/ar.png" alt="Argentina" className="scoreboard-flag-icon" style={{ borderColor: '#75aadb' }} />
-                    <span className="scoreboard-team-name">Argentina (SWE)</span>
+                {standings.length === 0 ? (
+                  <div style={{ padding: 'var(--space-6) 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>
+                    <p style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>No active standings yet</p>
+                    <p>Votes cast on the platform will appear here in real-time.</p>
                   </div>
-                  <span className="scoreboard-metric" style={{ color: '#75aadb' }}>29 Votes</span>
-                </div>
-
-                <div className="scoreboard-row" style={{ borderLeft: '3.5px solid #009739', paddingLeft: 'var(--space-2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', width: '20px' }}>2ND</div>
-                  <div className="scoreboard-team" style={{ flex: 1 }}>
-                    <img src="https://flagcdn.com/w80/br.png" alt="Brazil" className="scoreboard-flag-icon" style={{ borderColor: '#009739' }} />
-                    <span className="scoreboard-team-name">Brazil (CSE)</span>
-                  </div>
-                  <span className="scoreboard-metric" style={{ color: 'var(--text-primary)' }}>20 Votes</span>
-                </div>
-
-                <div className="scoreboard-row" style={{ borderLeft: '3.5px solid #dd0000', paddingLeft: 'var(--space-2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', width: '20px' }}>3RD</div>
-                  <div className="scoreboard-team" style={{ flex: 1 }}>
-                    <img src="https://flagcdn.com/w80/de.png" alt="Germany" className="scoreboard-flag-icon" style={{ borderColor: '#dd0000' }} />
-                    <span className="scoreboard-team-name">Germany (EEE)</span>
-                  </div>
-                  <span className="scoreboard-metric" style={{ color: 'var(--text-primary)' }}>12 Votes</span>
-                </div>
-
-                <div className="scoreboard-row" style={{ borderLeft: '3.5px solid #002395', paddingLeft: 'var(--space-2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', width: '20px' }}>4TH</div>
-                  <div className="scoreboard-team" style={{ flex: 1 }}>
-                    <img src="https://flagcdn.com/w80/fr.png" alt="France" className="scoreboard-flag-icon" style={{ borderColor: '#002395' }} />
-                    <span className="scoreboard-team-name">France (BBA)</span>
-                  </div>
-                  <span className="scoreboard-metric" style={{ color: 'var(--text-primary)' }}>8 Votes</span>
-                </div>
+                ) : (
+                  standings.map((stand, index) => {
+                    const rankLabel = index === 0 ? '1ST' : index === 1 ? '2ND' : index === 2 ? '3RD' : '4TH';
+                    const accentColor = getTeamAccentColor(stand.teamName);
+                    return (
+                      <div 
+                        key={stand.teamId} 
+                        className="scoreboard-row" 
+                        style={{ 
+                          borderLeft: `3.5px solid ${accentColor}`, 
+                          paddingLeft: 'var(--space-2)', 
+                          background: index === 0 ? `${accentColor}0a` : undefined 
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: index === 0 ? accentColor : 'var(--text-muted)', width: '20px' }}>
+                          {rankLabel}
+                        </div>
+                        <div className="scoreboard-team" style={{ flex: 1 }}>
+                          <img 
+                            src={getTeamFlagUrl(stand.flag)} 
+                            alt={stand.teamName} 
+                            className="scoreboard-flag-icon" 
+                            style={{ borderColor: accentColor }} 
+                          />
+                          <span className="scoreboard-team-name">{stand.teamName}</span>
+                        </div>
+                        <span className="scoreboard-metric" style={{ color: index === 0 ? accentColor : 'var(--text-primary)' }}>
+                          {stand.votes} {stand.votes === 1 ? 'Vote' : 'Votes'}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
 
                 <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                     <span style={{ width: '6px', height: '6px', background: 'var(--green)', borderRadius: '50%', display: 'inline-block' }} /> 
                     SYSTEM ONLINE
                   </span>
-                  <span>TOTAL TURNOUT: 69</span>
+                  <span>TOTAL TURNOUT: {totalVotersCount}</span>
                 </div>
               </div>
 
@@ -150,38 +146,49 @@ export default async function LandingPage() {
             <div className="section-header" style={{ marginBottom: 'var(--space-8)' }}>
               <div>
                 <h2 className="section-title">Participating Teams</h2>
-                <p className="section-sub">{teams.length} national teams · Elect committee members</p>
+                <p className="section-sub">{dbTeams.length} national teams · Elect committee members</p>
               </div>
             </div>
             <div className="team-grid">
-              {teams.map((team) => (
-                <div 
-                  key={team.name} 
-                  className="team-card"
-                  style={{ 
-                    '--team-accent': getTeamAccentColor(team.name),
-                    '--team-accent-glow': getTeamAccentColor(team.name) + '25',
-                  } as React.CSSProperties}
-                >
-                  {/* Colored top brand strip */}
-                  <div style={{ height: '4px', width: '100%', background: getTeamGradient(team.name) }} />
-                  
-                  <div className="team-card-flag">
-                    <img 
-                      src={getTeamFlagUrl(team.flag)} 
-                      alt={team.name}
-                    />
-                  </div>
-                  <div className="team-card-body">
-                    <p className="team-card-name">
-                      {team.name}
-                    </p>
-                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', opacity: 0.8 }}>
-                      {team.region}
-                    </p>
-                  </div>
+              {dbTeams.length === 0 ? (
+                <div className="card" style={{ gridColumn: '1 / -1', padding: 'var(--space-8)', textAlign: 'center', background: 'rgba(255, 255, 255, 0.01)', borderColor: 'var(--border)' }}>
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>
+                    No teams have been added to the election yet.
+                  </p>
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 'var(--space-2)' }}>
+                    Please log in as an administrator to seed default election data.
+                  </p>
                 </div>
-              ))}
+              ) : (
+                dbTeams.map((team) => (
+                  <div 
+                    key={team.id} 
+                    className="team-card"
+                    style={{ 
+                      '--team-accent': getTeamAccentColor(team.name),
+                      '--team-accent-glow': getTeamAccentColor(team.name) + '25',
+                    } as React.CSSProperties}
+                  >
+                    {/* Colored top brand strip */}
+                    <div style={{ height: '4px', width: '100%', background: getTeamGradient(team.name) }} />
+                    
+                    <div className="team-card-flag">
+                      <img 
+                        src={getTeamFlagUrl(team.flag)} 
+                        alt={team.name}
+                      />
+                    </div>
+                    <div className="team-card-body">
+                      <p className="team-card-name">
+                        {team.name}
+                      </p>
+                      <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', opacity: 0.8 }}>
+                        {team.description || 'Participating Division'}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </section>

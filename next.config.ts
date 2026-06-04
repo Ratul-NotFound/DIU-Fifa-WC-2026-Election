@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.githubusercontent.com' },
     ],
   },
+  // Disable dev indicators (floating N logo overlay)
+  devIndicators: false,
   // Reduce bundle size
   poweredByHeader: false,
   compress: true,

@@ -8,6 +8,7 @@ import {
   approveCandidate,
   rejectCandidate,
   createCandidate,
+  updateCandidate,
   batchApproveCandidates,
   addAuditLog,
 } from '@/lib/firebase/firestore';
@@ -24,6 +25,7 @@ export default function AdminCandidatesPage() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [msg, setMsg] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<Candidate | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState<Omit<Candidate, 'id' | 'votesReceived' | 'createdAt'>>({
@@ -71,13 +73,44 @@ export default function AdminCandidatesPage() {
     e.preventDefault();
     if (!form.team || !form.position) { showMsg('Select team and position.'); return; }
     setSubmitting(true);
-    await createCandidate({ ...form, votesReceived: 0, createdAt: Date.now() });
-    if (profile) await addAuditLog({ adminUid: profile.uid, adminName: profile.name, action: `Added candidate: ${form.name}`, target: form.team, details: '', timestamp: Date.now() });
+    const candidateName = form.name;
+    if (editing) {
+      await updateCandidate(editing.id, form);
+      if (profile) await addAuditLog({ adminUid: profile.uid, adminName: profile.name, action: `Updated candidate: ${form.name}`, target: editing.id, details: '', timestamp: Date.now() });
+      showMsg(`✓ ${candidateName} updated.`);
+    } else {
+      await createCandidate({ ...form, votesReceived: 0, createdAt: Date.now() });
+      if (profile) await addAuditLog({ adminUid: profile.uid, adminName: profile.name, action: `Added candidate: ${form.name}`, target: form.team, details: '', timestamp: Date.now() });
+      showMsg(`✓ ${candidateName} added successfully.`);
+    }
     setShowForm(false);
     setForm({ uid: '', name: '', studentId: '', department: '', batch: '', team: '', position: '', manifesto: '', photoUrl: '', approved: false });
+    setEditing(null);
     setSubmitting(false);
     await reload();
-    showMsg(`✓ ${form.name} added successfully.`);
+  };
+
+  const openAdd = () => {
+    setEditing(null);
+    setForm({ uid: '', name: '', studentId: '', department: '', batch: '', team: '', position: '', manifesto: '', photoUrl: '', approved: false });
+    setShowForm(true);
+  };
+
+  const openEdit = (c: Candidate) => {
+    setEditing(c);
+    setForm({
+      uid: c.uid || '',
+      name: c.name,
+      studentId: c.studentId || '',
+      department: c.department || '',
+      batch: c.batch || '',
+      team: c.team,
+      position: c.position,
+      manifesto: c.manifesto || '',
+      photoUrl: c.photoUrl || '',
+      approved: c.approved,
+    });
+    setShowForm(true);
   };
 
   const toggleSelect = (id: string) => {
@@ -104,7 +137,7 @@ export default function AdminCandidatesPage() {
           <h1>Candidates</h1>
           <p className="section-sub">{candidates.filter(c => !c.approved).length} pending approval</p>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)} id="btn-add-candidate">
+        <button className="btn btn-primary btn-sm" onClick={openAdd} id="btn-add-candidate">
           + Add Candidate
         </button>
       </div>
@@ -179,6 +212,9 @@ export default function AdminCandidatesPage() {
                         Approve
                       </button>
                     )}
+                    <button className="btn btn-ghost btn-sm" onClick={() => openEdit(c)} id={`btn-edit-${c.id}`}>
+                      Edit
+                    </button>
                     <button className="btn btn-danger btn-sm" onClick={() => handleReject(c.id, c.name)} id={`btn-reject-${c.id}`}>
                       Remove
                     </button>
@@ -194,7 +230,7 @@ export default function AdminCandidatesPage() {
       {showForm && (
         <div className="modal-backdrop" onClick={() => setShowForm(false)}>
           <div className="modal" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
-            <h2 className="modal-title">Add New Candidate</h2>
+            <h2 className="modal-title">{editing ? 'Edit Candidate' : 'Add New Candidate'}</h2>
             <form onSubmit={handleAddCandidate} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -244,7 +280,7 @@ export default function AdminCandidatesPage() {
               <div className="modal-actions">
                 <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={submitting} id="btn-submit-candidate">
-                  {submitting ? 'Adding…' : 'Add Candidate'}
+                  {submitting ? 'Saving…' : editing ? 'Save Changes' : 'Add Candidate'}
                 </button>
               </div>
             </form>

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { getElectionSettings, updateElectionSettings, addAuditLog } from '@/lib/firebase/firestore';
 import { useAuth } from '@/lib/context/AuthContext';
 import type { ElectionSettings, ElectionStatus } from '@/lib/types';
-import { statusLabel } from '@/lib/utils/helpers';
+import { statusLabel, formatLocalDatetime } from '@/lib/utils/helpers';
 
 export default function ElectionControlPage() {
   const { profile } = useAuth();
@@ -18,8 +18,8 @@ export default function ElectionControlPage() {
   useEffect(() => {
     getElectionSettings().then(s => {
       setSettings(s);
-      if (s?.votingStart) setVotingStart(new Date(s.votingStart).toISOString().slice(0, 16));
-      if (s?.votingEnd)   setVotingEnd(new Date(s.votingEnd).toISOString().slice(0, 16));
+      if (s?.votingStart) setVotingStart(formatLocalDatetime(s.votingStart));
+      if (s?.votingEnd)   setVotingEnd(formatLocalDatetime(s.votingEnd));
       setLoading(false);
     });
   }, []);

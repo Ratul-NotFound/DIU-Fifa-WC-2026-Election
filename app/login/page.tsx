@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signInWithGoogle, loginWithEmail, registerWithEmail, resendVerification } from '@/lib/firebase/auth';
 import FootballLogo from '@/components/layout/FootballLogo';
+import { useAuth } from '@/lib/context/AuthContext';
 
 type Mode = 'login' | 'register' | 'verify';
 
 export default function LoginPage() {
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
@@ -19,6 +21,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const clearMessages = () => { setError(''); setSuccess(''); };
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, authLoading, router]);
 
   const handleGoogle = async () => {
     clearMessages();

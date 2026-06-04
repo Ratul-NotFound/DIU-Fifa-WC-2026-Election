@@ -76,9 +76,13 @@ export default function Navbar() {
 
           <div className="navbar-actions">
             {user ? (
-              <div className="avatar" title={profile?.name || user.email || ''}>
-                {initials}
-              </div>
+              <Link href="/profile" className="avatar" title={profile?.name || user.email || ''} style={{ textDecoration: 'none' }}>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="Profile" />
+                ) : (
+                  initials
+                )}
+              </Link>
             ) : (
               <Link href="/login" className="btn btn-primary btn-sm">
                 Sign In
@@ -123,10 +127,18 @@ export default function Navbar() {
         {profile ? (
           <div style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-              <div className="avatar">{initials}</div>
+              <Link href="/profile" className="avatar" onClick={() => setDrawerOpen(false)}>
+                {user?.photoURL ? (
+                  <img src={user.photoURL} alt="Profile" />
+                ) : (
+                  initials
+                )}
+              </Link>
               <div>
-                <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>{profile.name || 'Student'}</p>
-                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{profile.email}</p>
+                <Link href="/profile" style={{ textDecoration: 'none', color: 'inherit' }} onClick={() => setDrawerOpen(false)}>
+                  <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>{profile.name || 'Student'}</p>
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{profile.email}</p>
+                </Link>
               </div>
             </div>
           </div>

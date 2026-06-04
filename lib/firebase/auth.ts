@@ -1,6 +1,7 @@
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendEmailVerification,
@@ -9,7 +10,7 @@ import {
   type User,
 } from 'firebase/auth';
 import { auth } from './config';
-import { createUserProfile, getUserProfile } from './firestore';
+import { createUserProfile, getUserProfile, setUserRole } from './firestore';
 
 const DIU_DOMAIN = '@diu.edu.bd';
 
@@ -46,16 +47,7 @@ export async function signInWithGoogle(): Promise<{ success: boolean; error?: st
     // Hint the Google account picker to DIU workspace
     provider.setCustomParameters({ hd: 'diu.edu.bd' });
 
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-
-    if (!user.email || !isDIUEmail(user.email)) {
-      await signOut(auth);
-      return { success: false, error: 'Only @diu.edu.bd Google accounts are allowed.' };
-    }
-
-    // Create or ensure user profile exists in Firestore
-    await ensureUserProfile(user);
+    await signInWithRedirect(auth, provider);
     return { success: true };
   } catch (err: unknown) {
     const error = err as { code?: string; message?: string };
@@ -215,25 +207,47 @@ export function onAuthChange(callback: (user: User | null) => void): () => void 
     callback(null);
     return () => {};
   }
-  return onAuthStateChanged(auth, callback);
+  return onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      if (firebaseUser.email && isDIUEmail(firebaseUser.email)) {
+        try {
+          await ensureUserProfile(firebaseUser);
+        } catch (err) {
+          console.error("Error ensuring user profile:", err);
+        }
+      } else {
+        // Not a DIU email — sign them out
+        await signOut(auth);
+        callback(null);
+        return;
+      }
+    }
+    callback(firebaseUser);
+  });
 }
 
 // ── Internal: ensure Firestore user doc ───────────────────
 async function ensureUserProfile(user: User, displayName?: string): Promise<void> {
   const existing = await getUserProfile(user.uid);
+  const isSuperAdminEmail = user.email === 'ratul23105101298@diu.edu.bd';
   if (!existing) {
+    const emailPrefix = user.email ? user.email.split('@')[0] : '';
+    // DIU Student ID format: 201-15-5678 or similar digits-digits-digits
+    const isStudentId = /^\d{2,3}-\d{2,3}-\d{4,6}$/.test(emailPrefix);
     await createUserProfile({
       uid: user.uid,
       name: displayName || user.displayName || 'Demo Student',
       email: user.email || '',
-      studentId: '201-15-5678',
+      studentId: isStudentId ? emailPrefix : '201-15-5678',
       department: 'CSE',
       batch: '55th',
-      role: 'student',
+      role: isSuperAdminEmail ? 'superAdmin' : 'student',
       favoriteTeam: '',
       emailVerified: user.emailVerified,
       votedPositions: [],
       createdAt: Date.now(),
     });
+  } else if (isSuperAdminEmail && existing.role !== 'superAdmin') {
+    await setUserRole(user.uid, 'superAdmin');
   }
 }

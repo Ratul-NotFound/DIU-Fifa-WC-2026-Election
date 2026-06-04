@@ -3,47 +3,43 @@
 import { useAuth } from '@/lib/context/AuthContext';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getTeams, getElectionSettings, getAllResultsForTeam } from '@/lib/firebase/firestore';
-import type { Team, ElectionSettings, ResultsDoc } from '@/lib/types';
+import { getTeams, getElectionSettings } from '@/lib/firebase/firestore';
+import type { Team, ElectionSettings } from '@/lib/types';
 import { statusLabel, getTeamFlagUrl, getTeamAccentColor, getTeamGradient } from '@/lib/utils/helpers';
 
-export default function DashboardPage() {
+export default function VoteHubPage() {
   const { profile } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const [settings, setSettings] = useState<ElectionSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [greetingText, setGreetingText] = useState('Hello');
 
   useEffect(() => {
     async function load() {
       const [t, s] = await Promise.all([getTeams(), getElectionSettings()]);
       setTeams(t);
       setSettings(s);
-      
-      const h = new Date().getHours();
-      if (h < 12) setGreetingText('Good morning');
-      else if (h < 17) setGreetingText('Good afternoon');
-      else setGreetingText('Good evening');
-      
       setLoading(false);
     }
     load();
   }, []);
 
-  const votedCount = profile?.votedPositions?.length ?? 0;
-  const isLive = settings?.status === 'live';
-
   if (loading) {
     return <div className="loading-center"><div className="spinner" /></div>;
   }
+
+  const isLive = settings?.status === 'live';
 
   return (
     <div className="page-content">
       {/* ── Header ── */}
       <div className="section-header">
         <div>
-          <h1>{greetingText}, {profile?.name?.split(' ')[0] || 'Student'} 👋</h1>
-          <p className="section-sub">FIFA World Cup Election Dashboard</p>
+          <h1>DIU Committee Ballots</h1>
+          <p className="section-sub">
+            {isLive 
+              ? 'Select a national team to cast your vote for their committee representatives' 
+              : 'Voting is currently closed. View results to check standings.'}
+          </p>
         </div>
         {settings && (
           <span className={`badge ${
@@ -56,62 +52,21 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* ── Stats ── */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <p className="stat-label">Teams</p>
-          <p className="stat-value">{teams.length}</p>
-          <p className="stat-sub">Participating</p>
-        </div>
-        <div className="stat-card">
-          <p className="stat-label">Votes Cast</p>
-          <p className="stat-value">{votedCount}</p>
-          <p className="stat-sub">By you</p>
-        </div>
-        <div className="stat-card">
-          <p className="stat-label">Status</p>
-          <p className="stat-value" style={{ fontSize: 'var(--text-lg)' }}>
-            {settings ? statusLabel(settings.status) : 'Loading…'}
-          </p>
-        </div>
-        <div className="stat-card">
-          <p className="stat-label">Role</p>
-          <p className="stat-value" style={{ fontSize: 'var(--text-lg)', textTransform: 'capitalize' }}>
-            {profile?.role ?? 'Student'}
-          </p>
-        </div>
-      </div>
-
       {/* ── Election Status Banner ── */}
-      {settings?.status === 'draft' && (
-        <div className="alert alert-info" style={{ marginBottom: 'var(--space-6)' }}>
-          🗓 Election has not started yet. Check back soon.
-        </div>
-      )}
-      {settings?.status === 'counting' && (
+      {!isLive && (
         <div className="alert alert-warning" style={{ marginBottom: 'var(--space-6)' }}>
-          🔢 Voting is closed. Results are being counted.
-        </div>
-      )}
-      {settings?.status === 'finished' && (
-        <div className="alert alert-success" style={{ marginBottom: 'var(--space-6)' }}>
-          🏆 Election finished! <Link href="/results" style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}>View final results →</Link>
+          🗳️ Voting is not open. 
+          {settings?.status === 'draft' && ' The election has not started yet.'}
+          {settings?.status === 'counting' && ' Votes are currently being counted.'}
+          {settings?.status === 'finished' && ' The election has ended.'}
+          {' '}
+          <Link href="/results" style={{ textDecoration: 'underline', fontWeight: 600, color: 'inherit' }}>
+            Go to Results page →
+          </Link>
         </div>
       )}
 
       {/* ── Teams Grid ── */}
-      <div className="section-header">
-        <div>
-          <h2 className="section-title">National Teams</h2>
-          <p className="section-sub">
-            {isLive ? 'Select a team to vote for their committee members' : 'Teams participating in the election'}
-          </p>
-        </div>
-        <Link href="/results" className="btn btn-ghost btn-sm">
-          View Results →
-        </Link>
-      </div>
-
       <div className="team-grid">
         {teams.map((team) => {
           const hasVoted = profile?.votedPositions?.some(vp => vp.startsWith(team.id + '_'));
@@ -156,10 +111,9 @@ export default function DashboardPage() {
         <div className="empty-state">
           <span className="empty-icon">⚽</span>
           <p className="empty-title">No Teams Yet</p>
-          <p className="empty-desc">Teams will appear here once the admin adds them.</p>
+          <p className="empty-desc">Teams will appear here once the admin adds them to the election.</p>
         </div>
       )}
-
     </div>
   );
 }
