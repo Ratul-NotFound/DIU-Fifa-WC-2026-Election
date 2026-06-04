@@ -86,21 +86,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* handled via hamburger in full impl */}
           </div>
           {/* Mobile pill links */}
-          <div style={{
-            display: 'flex',
-            gap: 'var(--space-2)',
-            overflowX: 'auto',
-            paddingBottom: 'var(--space-3)',
-            marginBottom: 'var(--space-4)',
-          }} className="md-hidden">
+          <div className="admin-mobile-nav lg-hidden">
             {adminNav.map(item => {
               const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`tab${active ? ' active' : ''}`}
-                  style={{ whiteSpace: 'nowrap', border: '1px solid var(--border)', borderBottom: active ? '2px solid var(--blue)' : undefined, borderRadius: 'var(--radius)' }}
+                  className={`admin-mobile-tab${active ? ' active' : ''}`}
                 >
                   {item.label}
                 </Link>

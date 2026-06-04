@@ -43,7 +43,7 @@ export default async function LandingPage() {
   const totalVotersCount = standings.reduce((sum, s) => sum + s.votes, 0);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div style={{ minHeight: '100vh' }}>
       {/* ── Global Navbar Wrapper ── */}
       <Navbar />
 
@@ -84,56 +84,105 @@ export default async function LandingPage() {
                 </div>
               </div>
 
-              {/* Right Column: Live Ballot scoreboard monitor */}
-              <div className="hero-scoreboard">
-                <div className="scoreboard-title">DIU Live Standings</div>
+              {/* Right Column: FIFA Emblem Logo & Scoreboard Standings */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', alignItems: 'center', width: '100%', maxWidth: '380px', margin: '0 auto' }}>
                 
-                {standings.length === 0 ? (
-                  <div style={{ padding: 'var(--space-6) 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>
-                    <p style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>No active standings yet</p>
-                    <p>Votes cast on the platform will appear here in real-time.</p>
+                {/* FIFA 2026 Colorful Trophy & Brand Emblem */}
+                <div style={{
+                  width: '100%',
+                  position: 'relative',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  background: 'rgba(255, 255, 255, 0.01)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-xl)',
+                  padding: 'var(--space-5)',
+                  boxShadow: 'var(--shadow-lg)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)'
+                }}>
+                  <img 
+                    src="/fifa_hero_graphic.png" 
+                    alt="FIFA World Cup 2026 Logo" 
+                    style={{ 
+                      width: '100%', 
+                      height: 'auto', 
+                      maxHeight: '220px',
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 8px 20px rgba(6, 182, 212, 0.35))',
+                      animation: 'float 6s ease-in-out infinite' 
+                    }} 
+                  />
+                  {/* Neon tag overlay */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 'var(--space-3)',
+                    right: 'var(--space-3)',
+                    background: 'var(--yellow-bg)',
+                    border: '1px solid var(--yellow-dim)',
+                    color: 'var(--yellow)',
+                    fontSize: '9px',
+                    fontWeight: 800,
+                    padding: '2px 8px',
+                    borderRadius: 'var(--radius-sm)',
+                    letterSpacing: '0.05em'
+                  }}>
+                    OFFICIAL BRANDING
                   </div>
-                ) : (
-                  standings.map((stand, index) => {
-                    const rankLabel = index === 0 ? '1ST' : index === 1 ? '2ND' : index === 2 ? '3RD' : '4TH';
-                    const accentColor = getTeamAccentColor(stand.teamName);
-                    return (
-                      <div 
-                        key={stand.teamId} 
-                        className="scoreboard-row" 
-                        style={{ 
-                          borderLeft: `3.5px solid ${accentColor}`, 
-                          paddingLeft: 'var(--space-2)', 
-                          background: index === 0 ? `${accentColor}0a` : undefined 
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: index === 0 ? accentColor : 'var(--text-muted)', width: '20px' }}>
-                          {rankLabel}
-                        </div>
-                        <div className="scoreboard-team" style={{ flex: 1 }}>
-                          <img 
-                            src={getTeamFlagUrl(stand.flag)} 
-                            alt={stand.teamName} 
-                            className="scoreboard-flag-icon" 
-                            style={{ borderColor: accentColor }} 
-                          />
-                          <span className="scoreboard-team-name">{stand.teamName}</span>
-                        </div>
-                        <span className="scoreboard-metric" style={{ color: index === 0 ? accentColor : 'var(--text-primary)' }}>
-                          {stand.votes} {stand.votes === 1 ? 'Vote' : 'Votes'}
-                        </span>
-                      </div>
-                    );
-                  })
-                )}
-
-                <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ width: '6px', height: '6px', background: 'var(--green)', borderRadius: '50%', display: 'inline-block' }} /> 
-                    SYSTEM ONLINE
-                  </span>
-                  <span>TOTAL TURNOUT: {totalVotersCount}</span>
                 </div>
+
+                {/* Scoreboard Monitor */}
+                <div className="hero-scoreboard">
+                  <div className="scoreboard-title">DIU Live Standings</div>
+                  
+                  {standings.length === 0 ? (
+                    <div style={{ padding: 'var(--space-6) 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>
+                      <p style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>No active standings yet</p>
+                      <p>Votes cast on the platform will appear here in real-time.</p>
+                    </div>
+                  ) : (
+                    standings.map((stand, index) => {
+                      const rankLabel = index === 0 ? '1ST' : index === 1 ? '2ND' : index === 2 ? '3RD' : '4TH';
+                      const accentColor = getTeamAccentColor(stand.teamName);
+                      return (
+                        <div 
+                          key={stand.teamId} 
+                          className="scoreboard-row" 
+                          style={{ 
+                            borderLeft: `3.5px solid ${accentColor}`, 
+                            paddingLeft: 'var(--space-2)', 
+                            background: index === 0 ? `${accentColor}0a` : undefined 
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: '11px', fontWeight: 800, color: index === 0 ? accentColor : 'var(--text-muted)', width: '20px' }}>
+                            {rankLabel}
+                          </div>
+                          <div className="scoreboard-team" style={{ flex: 1 }}>
+                            <img 
+                              src={getTeamFlagUrl(stand.flag)} 
+                              alt={stand.teamName} 
+                              className="scoreboard-flag-icon" 
+                              style={{ borderColor: accentColor }} 
+                            />
+                            <span className="scoreboard-team-name">{stand.teamName}</span>
+                          </div>
+                          <span className="scoreboard-metric" style={{ color: index === 0 ? accentColor : 'var(--text-primary)' }}>
+                            {stand.votes} {stand.votes === 1 ? 'Vote' : 'Votes'}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+
+                  <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-3)', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <span style={{ width: '6px', height: '6px', background: 'var(--green)', borderRadius: '50%', display: 'inline-block' }} /> 
+                      SYSTEM ONLINE
+                    </span>
+                    <span>TOTAL TURNOUT: {totalVotersCount}</span>
+                  </div>
+                </div>
+
               </div>
 
             </div>
@@ -193,6 +242,8 @@ export default async function LandingPage() {
           </div>
         </section>
 
+
+
         {/* ── Features ── */}
         <section style={{
           padding: 'var(--space-16) var(--space-4)',
@@ -240,7 +291,7 @@ export default async function LandingPage() {
           <div style={{ 
             maxWidth: 600, 
             margin: '0 auto',
-            backgroundImage: "linear-gradient(rgba(16, 25, 53, 0.85), rgba(16, 25, 53, 0.95)), url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80')",
+            backgroundImage: "linear-gradient(rgba(16, 25, 53, 0.85), rgba(16, 25, 53, 0.95)), url('/fifa_stadium_bg.png')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             padding: 'var(--space-10) var(--space-8)',

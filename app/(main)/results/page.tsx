@@ -147,8 +147,6 @@ export default function ResultsPage() {
               style={{
                 '--team-accent': accentColor,
                 '--team-accent-glow': accentColor + '25',
-                borderColor: isActive ? accentColor : undefined,
-                boxShadow: isActive ? `0 0 10px ${accentColor}33` : undefined,
               } as React.CSSProperties}
             >
               <img
