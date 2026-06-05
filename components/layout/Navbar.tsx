@@ -18,7 +18,17 @@ export default function Navbar() {
   const { profile, user } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [isAtTop, setIsAtTop] = React.useState(true);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsAtTop(window.scrollY === 0);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -33,7 +43,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="navbar">
+      <nav className={`navbar${isAtTop ? ' navbar-top' : ''}`}>
         <div className="navbar-inner">
           <Link href="/" className="navbar-brand">
             <span className="navbar-brand-icon">

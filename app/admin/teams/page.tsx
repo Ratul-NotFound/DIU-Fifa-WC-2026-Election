@@ -6,6 +6,24 @@ import { useAuth } from '@/lib/context/AuthContext';
 import type { Team } from '@/lib/types';
 import { getTeamFlagUrl, getTeamAccentColor } from '@/lib/utils/helpers';
 
+const SEED_TEAMS = [
+  { name: 'Argentina', flag: '🇦🇷', description: 'Reigning World Cup champions, led by technical mastery and elite tactical organization.' },
+  { name: 'France', flag: '🇫🇷', description: 'World Cup finalists and powerhouse, known for explosive pace, athleticism, and stellar attacking talent.' },
+  { name: 'Brazil', flag: '🇧🇷', description: 'Five-time World Champions, famous for their Joga Bonito style, samba flair, and elite individual skills.' },
+  { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', description: 'A highly structured, star-studded squad with strong physical presence and clinical finishers.' },
+  { name: 'Belgium', flag: '🇧🇪', description: 'A balanced, technical side with world-class playmaking capabilities and rapid transition play.' },
+  { name: 'Portugal', flag: '🇵🇹', description: 'An exceptionally deep, creative squad blending elite veteran leadership with young superstars.' },
+  { name: 'Netherlands', flag: '🇳🇱', description: 'Famous for Total Football, utilizing high-pressing wings and clinical dynamic attacks.' },
+  { name: 'Spain', flag: '🇪🇸', description: 'Masters of possession-based Tiki-Taka football, controlling the tempo and dictating play.' },
+  { name: 'Italy', flag: '🇮🇹', description: 'Tactically disciplined side, famous for resolute defensive structure and clinical counters.' },
+  { name: 'Croatia', flag: '🇭🇷', description: 'Resilient tournament team, known for elite midfield control, work rate, and penalty shootout mastery.' },
+  { name: 'USA', flag: '🇺🇸', description: 'Energetic, young squad built on high athleticism, high pressing, and rapid counterattacks.' },
+  { name: 'Germany', flag: '🇩🇪', description: 'Historically dominant force, playing with high-intensity pressing, precision, and efficiency.' },
+  { name: 'Morocco', flag: '🇲🇦', description: 'Historic African semifinalists, characterized by high-octane team spirit and elite defensive block.' },
+  { name: 'Uruguay', flag: '🇺🇾', description: 'Fiercely competitive side, known for their Garra Charrúa spirit, physical dominance, and lethal attacks.' },
+  { name: 'Japan', flag: '🇯🇵', description: 'Highly disciplined, technical team playing with swift fluid passing and exceptional work rate.' }
+];
+
 const defaultForm = { name: '', flag: '', logo: '', banner: '', description: '' };
 
 export default function AdminTeamsPage() {
@@ -28,7 +46,52 @@ export default function AdminTeamsPage() {
   const showMsg = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
   const openAdd = () => { setEditing(null); setForm(defaultForm); setShowForm(true); };
-  const openEdit = (t: Team) => { setEditing(t); setForm({ name: t.name, flag: t.flag ?? '', logo: t.logo ?? '', banner: t.banner ?? '', description: t.description ?? '' }); setShowForm(true); };
+  const openEdit = (t: Team) => { setForm({ name: t.name, flag: t.flag ?? '', logo: t.logo ?? '', banner: t.banner ?? '', description: t.description ?? '' }); setEditing(t); setShowForm(true); };
+
+  const handleSeedTeams = async () => {
+    if (!profile) return;
+    if (!confirm('Seed top 15 national teams in the database? Duplicate teams will be skipped.')) return;
+    
+    setLoading(true);
+    let addedCount = 0;
+    try {
+      const existing = await getTeams();
+      const existingNames = new Set(existing.map(t => t.name.toLowerCase()));
+      
+      for (const t of SEED_TEAMS) {
+        if (!existingNames.has(t.name.toLowerCase())) {
+          await createTeam({
+            name: t.name,
+            flag: t.flag,
+            logo: '',
+            banner: '',
+            description: t.description,
+            createdAt: Date.now()
+          });
+          addedCount++;
+        }
+      }
+      
+      if (addedCount > 0) {
+        await addAuditLog({
+          adminUid: profile.uid,
+          adminName: profile.name,
+          action: `Seeded ${addedCount} top 15 teams dynamically.`,
+          target: 'seeder',
+          details: `Teams added: ${SEED_TEAMS.filter(t => !existingNames.has(t.name.toLowerCase())).map(t => t.name).join(', ')}`,
+          timestamp: Date.now()
+        });
+        showMsg(`✓ Seeded ${addedCount} teams successfully!`);
+      } else {
+        showMsg('All top 15 teams already exist.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to seed teams.');
+    } finally {
+      await reload();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +126,10 @@ export default function AdminTeamsPage() {
     <div>
       <div className="section-header">
         <div><h1>Teams</h1><p className="section-sub">{teams.length} participating teams</p></div>
-        <button className="btn btn-primary btn-sm" onClick={openAdd} id="btn-add-team">+ Add Team</button>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <button className="btn btn-ghost btn-sm" onClick={handleSeedTeams} id="btn-seed-teams">⚡ Seed Top 15 Teams</button>
+          <button className="btn btn-primary btn-sm" onClick={openAdd} id="btn-add-team">+ Add Team</button>
+        </div>
       </div>
 
       {msg && <div className="alert alert-success" style={{ marginBottom: 'var(--space-4)' }}>{msg}</div>}

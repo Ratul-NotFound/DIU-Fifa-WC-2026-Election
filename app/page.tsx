@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { getElectionSettings, getTeams, getLiveTeamStandings } from '@/lib/firebase/firestore';
 import { getTeamFlagUrl, getTeamGradient, getTeamAccentColor } from '@/lib/utils/helpers';
 import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import FootballLogo from '@/components/layout/FootballLogo';
 
 export const metadata: Metadata = {
@@ -59,7 +60,7 @@ export default async function LandingPage() {
                   <span>DIU FIFA COMMUNITY PORTAL</span>
                 </div>
                 <h1 className="hero-title" style={{ maxWidth: '680px' }}>
-                  The Hub for Daffodil International University Football
+                  The Hub for Daffodil International University FIFA World Cup
                 </h1>
                 <p className="hero-sub" style={{ maxWidth: '600px', marginBottom: 'var(--space-6)' }}>
                   Connect with football enthusiasts, compete in local campus tournaments, and participate in the 2026 Committee Elections.
@@ -292,20 +293,7 @@ export default async function LandingPage() {
         </section>
 
         {/* ── Footer ── */}
-        <footer style={{
-          borderTop: '1px solid var(--border)',
-          padding: 'var(--space-8) var(--space-4)',
-          textAlign: 'center',
-          color: 'var(--text-muted)',
-          fontSize: 'var(--text-sm)',
-          background: 'var(--bg-nav)'
-        }}>
-          <p>© 2026 DIU FIFA Community Portal · Daffodil International University</p>
-          <p style={{ marginTop: 'var(--space-2)', display: 'flex', justifyContent: 'center', gap: 'var(--space-4)' }}>
-            <Link href="/admin" style={{ color: 'var(--text-muted)' }}>Admin Panel</Link>
-            <Link href="/results" style={{ color: 'var(--text-muted)' }}>Public Results</Link>
-          </p>
-        </footer>
+        <Footer />
       </div>
     </div>
   );
