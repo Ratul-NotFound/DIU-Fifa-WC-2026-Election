@@ -86,6 +86,7 @@
   --space-10: 2.5rem;
   --space-12: 3rem;
   --space-16: 4rem;
+  --space-20: 5rem;
 
   /* Radii */
   --radius-sm: 4px;
@@ -676,7 +677,7 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   gap: var(--space-2);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .navbar-links {
     display: flex;
   }
@@ -724,7 +725,7 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   cursor: pointer;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .hamburger {
     display: none;
   }
@@ -944,8 +945,14 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 /* ── Team Grid ── */
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--space-2);
+}
+
+@media (min-width: 640px) {
+  .team-grid {
+    gap: var(--space-4);
+  }
 }
 
 /* ── Team Card ── */
@@ -1442,6 +1449,12 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   align-items: center;
 }
 
+@media (max-width: 768px) {
+  .hero {
+    padding: var(--space-10) var(--space-4) var(--space-6);
+  }
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-8px) rotate(1deg); }
@@ -1618,25 +1631,39 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 }
 
 .hero-title {
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
   font-weight: 800;
   color: #ffffff;
-  margin-bottom: var(--space-4);
-  line-height: 1.25;
+  margin-bottom: var(--space-3);
+  line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 480px) {
   .hero-title {
-    font-size: 2.75rem;
+    font-size: var(--text-3xl);
+  }
+}
+
+@media (min-width: 992px) {
+  .hero-title {
+    font-size: 3rem;
   }
 }
 
 .hero-sub {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   color: var(--text-secondary);
-  margin-bottom: var(--space-8);
-  line-height: 1.7;
+  margin-bottom: var(--space-6);
+  line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+  .hero-sub {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-8);
+    line-height: 1.7;
+  }
 }
 
 .hero-actions {
@@ -1644,6 +1671,51 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   flex-wrap: wrap;
   gap: var(--space-3);
   justify-content: center;
+  width: 100%;
+}
+
+@media (min-width: 992px) {
+  .hero-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ── Hero Logo Wrapper ── */
+.hero-logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.hero-logo-img {
+  width: 100%;
+  height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 20px rgba(6, 182, 212, 0.35));
+}
+
+@media (min-width: 992px) {
+  .hero-logo-wrapper {
+    max-width: 340px;
+  }
+  .hero-logo-img {
+    max-height: 260px;
+  }
 }
 
 /* ── Auth Page ── */
@@ -1991,9 +2063,64 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 /* ── DIU FIFA Community Portal ── */
 .portal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-8);
   margin-top: var(--space-10);
+}
+
+.election-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  align-items: start;
+  width: 100%;
+}
+
+@media (min-width: 992px) {
+  .election-layout-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-10);
+  }
+}
+
+.section-padding {
+  padding: var(--space-16) var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .section-padding {
+    padding: var(--space-6) var(--space-4) !important;
+  }
+}
+
+.teams-section-wrapper {
+  margin-top: var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .teams-section-wrapper {
+    margin-top: var(--space-12);
+  }
+}
+
+.cta-card {
+  max-width: 600px;
+  margin: 0 auto;
+  background-image: linear-gradient(rgba(16, 25, 53, 0.85), rgba(16, 25, 53, 0.95)), url('/fifa_stadium_bg.png');
+  background-size: cover;
+  background-position: center;
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--fifa-purple);
+  box-shadow: var(--shadow-lg);
+}
+
+@media (min-width: 640px) {
+  .cta-card {
+    padding: var(--space-10) var(--space-8);
+    border-radius: var(--radius-xl);
+    border-width: 2px;
+  }
 }
 
 .portal-card {
@@ -2073,7 +2200,7 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 
 .footer-inner {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  grid-template-columns: 2fr 1fr 1.5fr;
   gap: var(--space-10);
   padding: 0 var(--space-4) var(--space-12) var(--space-4);
 }
