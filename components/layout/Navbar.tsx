@@ -35,26 +35,47 @@ export default function Navbar() {
     <>
       <nav className="navbar">
         <div className="navbar-inner">
-          <Link href={user ? "/dashboard" : "/"} className="navbar-brand">
+          <Link href="/" className="navbar-brand">
             <span className="navbar-brand-icon">
               <FootballLogo />
             </span>
-            <span>DIU FIFA</span>
+            <span>DIU FIFA Community</span>
           </Link>
 
           {/* Desktop links */}
           <div className="navbar-links">
+            <Link
+              href="/#portal-hub"
+              className={`navbar-link${pathname === '/' ? ' active' : ''}`}
+            >
+              Community Hub
+            </Link>
+            <Link
+              href="/#election-hub"
+              className="navbar-link"
+            >
+              Election Hub
+            </Link>
             {user ? (
               <>
-                {navLinks.map(l => (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    className={`navbar-link${pathname.startsWith(l.href) ? ' active' : ''}`}
-                  >
-                    {l.label}
-                  </Link>
-                ))}
+                <Link
+                  href="/dashboard"
+                  className={`navbar-link${pathname.startsWith('/dashboard') ? ' active' : ''}`}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/vote"
+                  className={`navbar-link${pathname.startsWith('/vote') ? ' active' : ''}`}
+                >
+                  Vote
+                </Link>
+                <Link
+                  href="/results"
+                  className={`navbar-link${pathname.startsWith('/results') ? ' active' : ''}`}
+                >
+                  Results
+                </Link>
                 {isAdmin && (
                   <Link
                     href="/admin"
@@ -113,7 +134,7 @@ export default function Navbar() {
             <span className="navbar-brand-icon">
               <FootballLogo />
             </span>
-            DIU FIFA
+            DIU FIFA Community
           </span>
           <button
             onClick={() => setDrawerOpen(false)}
@@ -144,23 +165,48 @@ export default function Navbar() {
           </div>
         ) : (
           <div style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--border)' }}>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>DIU FIFA World Cup Election</p>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>DIU FIFA Community Portal</p>
           </div>
         )}
 
         <nav className="drawer-nav">
+          <Link
+            href="/#portal-hub"
+            className="drawer-link"
+            onClick={() => setDrawerOpen(false)}
+          >
+            🌐 Community Hub
+          </Link>
+          <Link
+            href="/#election-hub"
+            className="drawer-link"
+            onClick={() => setDrawerOpen(false)}
+          >
+            🗳️ Election Hub
+          </Link>
           {user ? (
             <>
-              {navLinks.map(l => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={`drawer-link${pathname.startsWith(l.href) ? ' active' : ''}`}
-                  onClick={() => setDrawerOpen(false)}
-                >
-                  {l.label}
-                </Link>
-              ))}
+              <Link
+                href="/dashboard"
+                className={`drawer-link${pathname.startsWith('/dashboard') ? ' active' : ''}`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                📋 Dashboard
+              </Link>
+              <Link
+                href="/vote"
+                className={`drawer-link${pathname.startsWith('/vote') ? ' active' : ''}`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                🗳️ Vote Booth
+              </Link>
+              <Link
+                href="/results"
+                className={`drawer-link${pathname.startsWith('/results') ? ' active' : ''}`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                📊 Results
+              </Link>
               {isAdmin && (
                 <Link
                   href="/admin"

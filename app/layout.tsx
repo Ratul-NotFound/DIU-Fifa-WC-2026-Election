@@ -3,9 +3,9 @@ import './globals.css';
 import { AuthProvider } from '@/lib/context/AuthContext';
 
 export const metadata: Metadata = {
-  title: 'DIU FIFA Election Platform',
-  description: 'Official voting platform for DIU FIFA World Cup committee elections. Vote for your national team representatives.',
-  keywords: ['DIU', 'FIFA', 'election', 'vote', 'university', 'football'],
+  title: 'DIU FIFA Community Portal',
+  description: 'Official portal for Daffodil International University FIFA Community, gaming tournaments, and committee elections.',
+  keywords: ['DIU', 'FIFA', 'election', 'vote', 'university', 'football', 'gaming', 'tournament'],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

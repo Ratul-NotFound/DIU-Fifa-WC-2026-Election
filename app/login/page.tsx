@@ -84,7 +84,7 @@ export default function LoginPage() {
             <FootballLogo />
           </div>
           <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 'var(--space-2)' }}>
-            DIU FIFA Election Platform
+            DIU FIFA Community Portal
           </p>
         </div>
 
