@@ -78,7 +78,7 @@ export default async function LandingPage() {
               {/* Right Column: FIFA Community Logo */}
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: '340px', margin: '0 auto' }}>
                 <img 
-                  src="/fifa_hero_graphic.png" 
+                  src="/fif.png" 
                   alt="DIU FIFA Community Logo" 
                   style={{ 
                     width: '100%', 
@@ -226,7 +226,7 @@ export default async function LandingPage() {
             <div style={{ marginTop: 'var(--space-12)' }}>
               <div className="section-header" style={{ marginBottom: 'var(--space-6)' }}>
                 <div>
-                  <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700 }}>Participating Divisions</h3>
+                  <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700 }}>Participating Teams</h3>
                   <p className="section-sub">Preview the {dbTeams.length} national teams competing in the current election cycle.</p>
                 </div>
               </div>
@@ -254,9 +254,6 @@ export default async function LandingPage() {
                       </div>
                       <div className="team-card-body">
                         <p className="team-card-name">{team.name}</p>
-                        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', opacity: 0.8 }}>
-                          {team.description || 'Participating Division'}
-                        </p>
                       </div>
                     </div>
                   ))

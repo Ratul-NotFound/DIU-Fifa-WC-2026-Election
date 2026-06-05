@@ -950,56 +950,54 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 
 /* ── Team Card ── */
 .team-card {
-  background: linear-gradient(180deg, rgba(16, 25, 53, 0.6) 0%, rgba(8, 14, 30, 0.8) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius-xl);
+  background: rgba(16, 25, 53, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   text-decoration: none;
-  transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  transition: all var(--transition);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   position: relative;
   box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(8px);
 }
 
 .team-card:hover {
   border-color: var(--team-accent, rgba(255, 255, 255, 0.2));
-  transform: translateY(-5px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 15px var(--team-accent-glow, rgba(59, 130, 246, 0));
+  transform: translateY(-4px);
+  background: rgba(16, 25, 53, 0.6);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 12px var(--team-accent-glow, rgba(59, 130, 246, 0));
 }
 
 .team-card-flag {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 120px;
-  background-image: 
-    radial-gradient(circle, rgba(16, 25, 53, 0.2) 0%, rgba(6, 9, 19, 0.8) 100%),
-    url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=300&q=50');
-  background-size: cover;
-  background-position: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  height: 80px;
+  background: rgba(8, 14, 30, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   position: relative;
   overflow: hidden;
 }
 
 .team-card-flag img {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 32px;
   object-fit: cover;
-  border-radius: var(--radius-full);
-  border: 2.5px solid var(--team-accent, rgba(255, 255, 255, 0.15));
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), 0 0 12px var(--team-accent-glow, rgba(255, 255, 255, 0));
+  border-radius: 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
   transition: transform var(--transition);
 }
 
 .team-card:hover .team-card-flag img {
-  transform: scale(1.1) rotate(2deg);
+  transform: scale(1.08);
 }
 
 .team-card-body {
-  padding: var(--space-4) var(--space-3);
+  padding: var(--space-3) var(--space-2);
   background: rgba(10, 16, 32, 0.45);
   flex-grow: 1;
   display: flex;
@@ -1011,10 +1009,16 @@ h4 { font-size: var(--text-base);font-weight: 600; }
 
 .team-card-name {
   font-weight: 700;
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   color: var(--text-primary);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  margin: 0;
+  transition: color var(--transition);
+}
+
+.team-card:hover .team-card-name {
+  color: var(--team-accent, var(--text-primary));
 }
 
 /* ── Candidate Cards (Voting) ── */
