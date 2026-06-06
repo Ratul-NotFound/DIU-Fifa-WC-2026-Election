@@ -17,7 +17,7 @@ const adminNav = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { profile, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -26,6 +26,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace('/dashboard');
     }
   }, [profile, loading, router]);
+
+  const initials = profile?.name
+    ? profile.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : user?.email?.[0]?.toUpperCase() ?? '?';
 
   if (loading) {
     return <div className="loading-center" style={{ minHeight: '100vh' }}><div className="spinner spinner-lg" /></div>;
@@ -36,13 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="page-wrapper">
       {/* Top bar */}
-      <header style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        height: 'var(--nav-height)',
-        background: 'var(--bg-nav)',
-        borderBottom: '1px solid var(--border)',
-        display: 'flex', alignItems: 'center',
-      }}>
+      <header className="admin-header">
         <div className="navbar-inner">
           <Link href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontWeight: 700, fontSize: 'var(--text-base)', color: 'var(--text-primary)', textDecoration: 'none' }}>
             <span className="navbar-brand-icon" style={{ width: '24px', height: '24px' }}>
@@ -50,11 +48,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </span>
             <span>DIU FIFA <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>· Admin</span></span>
           </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <span className="badge badge-yellow">
-              {profile.role === 'superAdmin' ? 'Super Admin' : 'Admin'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+            <span className="badge" style={{
+              background: profile.role === 'superAdmin' 
+                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%)'
+                : 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%)',
+              color: profile.role === 'superAdmin' ? '#f59e0b' : '#3b82f6',
+              border: profile.role === 'superAdmin' ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)',
+              boxShadow: profile.role === 'superAdmin' ? '0 0 10px rgba(245, 158, 11, 0.1)' : '0 0 10px rgba(59, 130, 246, 0.1)',
+              padding: '4px 12px',
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.05em'
+            }}>
+              {profile.role === 'superAdmin' ? '★ SUPER ADMIN' : '◆ ADMIN'}
             </span>
-            <Link href="/dashboard" className="btn btn-ghost btn-sm">← Student View</Link>
+            
+            <Link href="/dashboard" className="btn btn-ghost btn-sm" style={{ 
+              borderRadius: 'var(--radius-full)',
+              border: '1px solid var(--border)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '12px',
+              fontWeight: 600,
+              padding: '6px 14px',
+              color: 'var(--text-secondary)',
+              transition: 'all var(--transition)'
+            }}>
+              <span>← Student View</span>
+            </Link>
+
+            {user && (
+              <Link href="/profile" className="avatar" title={profile?.name || user.email || ''} style={{ textDecoration: 'none', width: '32px', height: '32px', border: '1.5px solid rgba(255,255,255,0.1)' }}>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="Profile" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                ) : (
+                  <span style={{ fontSize: '11px', fontWeight: 600 }}>{initials}</span>
+                )}
+              </Link>
+            )}
           </div>
         </div>
       </header>

@@ -69,7 +69,7 @@ export default async function LandingPage() {
                   background: 'rgba(139, 92, 246, 0.08)',
                   boxShadow: '0 0 15px rgba(139, 92, 246, 0.15)'
                 }}>
-                  📢 Run as Candidate
+                  📢 Apply for Candidate
                 </Link>
               </div>
             </div>
