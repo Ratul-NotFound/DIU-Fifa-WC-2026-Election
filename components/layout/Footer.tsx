@@ -26,9 +26,9 @@ export default function Footer() {
           <h4 className="footer-col-title">Platform</h4>
           <ul className="footer-links-list">
             <li><Link href="/">Home</Link></li>
-            <li><Link href="/#portal-hub">Community Hub</Link></li>
-            <li><Link href="/#election-hub">Election Booth</Link></li>
-            <li><Link href="/results">Live Standings</Link></li>
+            <li><Link href="/dashboard">Dashboard</Link></li>
+            <li><Link href="/vote">Vote</Link></li>
+            <li><Link href="/standings">Live Standings</Link></li>
           </ul>
         </div>
 

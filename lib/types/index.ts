@@ -74,6 +74,9 @@ export interface ElectionSettings {
   status: ElectionStatus;
   votingStart: number | null;
   votingEnd: number | null;
+  applicationsOpen: boolean;
+  showStatusBanner: boolean;
+  customBannerMessage: string;
   updatedAt: number;
   updatedBy: string;
 }

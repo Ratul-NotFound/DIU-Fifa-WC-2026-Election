@@ -11,7 +11,7 @@ import FootballLogo from './FootballLogo';
 const navLinks = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/vote', label: 'Vote' },
-  { href: '/results', label: 'Results' },
+  { href: '/standings', label: 'Standings' },
 ];
 
 export default function Navbar() {
@@ -54,18 +54,6 @@ export default function Navbar() {
 
           {/* Desktop links */}
           <div className="navbar-links">
-            <Link
-              href="/#portal-hub"
-              className={`navbar-link${pathname === '/' ? ' active' : ''}`}
-            >
-              Community Hub
-            </Link>
-            <Link
-              href="/#election-hub"
-              className="navbar-link"
-            >
-              Election Hub
-            </Link>
             {user ? (
               <>
                 <Link
@@ -81,10 +69,10 @@ export default function Navbar() {
                   Vote
                 </Link>
                 <Link
-                  href="/results"
-                  className={`navbar-link${pathname.startsWith('/results') ? ' active' : ''}`}
+                  href="/standings"
+                  className={`navbar-link${pathname.startsWith('/standings') ? ' active' : ''}`}
                 >
-                  Results
+                  Standings
                 </Link>
                 {isAdmin && (
                   <Link
@@ -97,10 +85,10 @@ export default function Navbar() {
               </>
             ) : (
               <Link
-                href="/results"
-                className={`navbar-link${pathname.startsWith('/results') ? ' active' : ''}`}
+                href="/standings"
+                className={`navbar-link${pathname.startsWith('/standings') ? ' active' : ''}`}
               >
-                Results
+                Standings
               </Link>
             )}
           </div>
@@ -180,20 +168,6 @@ export default function Navbar() {
         )}
 
         <nav className="drawer-nav">
-          <Link
-            href="/#portal-hub"
-            className="drawer-link"
-            onClick={() => setDrawerOpen(false)}
-          >
-            🌐 Community Hub
-          </Link>
-          <Link
-            href="/#election-hub"
-            className="drawer-link"
-            onClick={() => setDrawerOpen(false)}
-          >
-            🗳️ Election Hub
-          </Link>
           {user ? (
             <>
               <Link
@@ -211,11 +185,11 @@ export default function Navbar() {
                 🗳️ Vote Booth
               </Link>
               <Link
-                href="/results"
-                className={`drawer-link${pathname.startsWith('/results') ? ' active' : ''}`}
+                href="/standings"
+                className={`drawer-link${pathname.startsWith('/standings') ? ' active' : ''}`}
                 onClick={() => setDrawerOpen(false)}
               >
-                📊 Results
+                📊 Standings
               </Link>
               {isAdmin && (
                 <Link
@@ -229,11 +203,11 @@ export default function Navbar() {
             </>
           ) : (
             <Link
-              href="/results"
-              className={`drawer-link${pathname.startsWith('/results') ? ' active' : ''}`}
+              href="/standings"
+              className={`drawer-link${pathname.startsWith('/standings') ? ' active' : ''}`}
               onClick={() => setDrawerOpen(false)}
             >
-              📊 Results
+              📊 Standings
             </Link>
           )}
         </nav>

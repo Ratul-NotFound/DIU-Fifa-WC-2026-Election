@@ -67,7 +67,7 @@ function getMockDB(): MockDB {
         candidates: {},
         votes: {},
         results: {},
-        settings: { status: 'draft', votingStart: null, votingEnd: null, updatedAt: Date.now(), updatedBy: 'system' },
+        settings: { status: 'draft', votingStart: null, votingEnd: null, applicationsOpen: true, showStatusBanner: true, customBannerMessage: '', updatedAt: Date.now(), updatedBy: 'system' },
         logs: []
       };
     }
@@ -118,7 +118,7 @@ function getMockDB(): MockDB {
       'br_president': { teamId: 'br', positionId: 'president', candidateScores: { 'cand1': 12, 'cand2': 8 }, totalVotes: 20, updatedAt: Date.now() },
       'ar_president': { teamId: 'ar', positionId: 'president', candidateScores: { 'cand3': 15, 'cand4': 14 }, totalVotes: 29, updatedAt: Date.now() }
     },
-    settings: { status: 'live', votingStart: Date.now() - 3600000, votingEnd: Date.now() + 86400000, updatedAt: Date.now(), updatedBy: 'system' },
+    settings: { status: 'live', votingStart: Date.now() - 3600000, votingEnd: Date.now() + 86400000, applicationsOpen: true, showStatusBanner: true, customBannerMessage: '', updatedAt: Date.now(), updatedBy: 'system' },
     logs: [
       { id: 'log1', adminUid: 'system', adminName: 'System', action: 'Auto-seeded demo database with 15 FIFA teams.', target: 'system', details: '', timestamp: Date.now() }
     ]

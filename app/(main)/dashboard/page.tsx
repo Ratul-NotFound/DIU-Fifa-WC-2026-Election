@@ -83,20 +83,30 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Election Status Banner ── */}
-      {settings?.status === 'draft' && (
+      {settings?.customBannerMessage ? (
         <div className="alert alert-info" style={{ marginBottom: 'var(--space-6)' }}>
-          🗓 Election has not started yet. Check back soon.
+          📢 {settings.customBannerMessage}
         </div>
-      )}
-      {settings?.status === 'counting' && (
-        <div className="alert alert-warning" style={{ marginBottom: 'var(--space-6)' }}>
-          🔢 Voting is closed. Results are being counted.
-        </div>
-      )}
-      {settings?.status === 'finished' && (
-        <div className="alert alert-success" style={{ marginBottom: 'var(--space-6)' }}>
-          🏆 Election finished! <Link href="/results" style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}>View final results →</Link>
-        </div>
+      ) : (
+        settings?.showStatusBanner !== false && (
+          <>
+            {settings?.status === 'draft' && (
+              <div className="alert alert-info" style={{ marginBottom: 'var(--space-6)' }}>
+                🗓 Election has not started yet. Check back soon.
+              </div>
+            )}
+            {settings?.status === 'counting' && (
+              <div className="alert alert-warning" style={{ marginBottom: 'var(--space-6)' }}>
+                🔢 Voting is closed. Results are being counted.
+              </div>
+            )}
+            {settings?.status === 'finished' && (
+              <div className="alert alert-success" style={{ marginBottom: 'var(--space-6)' }}>
+                🏆 Election finished! <Link href="/standings" style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}>View final standings →</Link>
+              </div>
+            )}
+          </>
+        )
       )}
 
       {/* ── Teams Grid ── */}
@@ -107,8 +117,8 @@ export default function DashboardPage() {
             {isLive ? 'Select a team to vote for their committee members' : 'Teams participating in the election'}
           </p>
         </div>
-        <Link href="/results" className="btn btn-ghost btn-sm">
-          View Results →
+        <Link href="/standings" className="btn btn-ghost btn-sm">
+          View Standings →
         </Link>
       </div>
 
@@ -126,7 +136,7 @@ export default function DashboardPage() {
               } as React.CSSProperties}
             >
               {/* Colored top brand strip */}
-              <div style={{ height: '4px', width: '100%', background: getTeamGradient(team.name) }} />
+              <div className="team-card-strip" style={{ height: '4px', width: '100%', background: getTeamGradient(team.name) }} />
 
               <div className="team-card-flag">
                 <img 

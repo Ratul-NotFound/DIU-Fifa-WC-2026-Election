@@ -64,7 +64,7 @@ export default function AdminOverview() {
     { label: 'Add Candidate', href: '/admin/candidates', icon: '👤' },
     { label: 'Manage Teams', href: '/admin/teams', icon: '🌍' },
     { label: 'Election Control', href: '/admin/election', icon: '🗳️' },
-    { label: 'View Results', href: '/results', icon: '📊' },
+    { label: 'View Standings', href: '/standings', icon: '📊' },
   ];
 
   return (

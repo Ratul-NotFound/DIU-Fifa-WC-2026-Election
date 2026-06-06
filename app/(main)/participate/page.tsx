@@ -7,9 +7,10 @@ import {
   getTeams,
   getPositions,
   createCandidate,
-  getCandidateByUid
+  getCandidateByUid,
+  getElectionSettings
 } from '@/lib/firebase/firestore';
-import type { Team, Position, Candidate } from '@/lib/types';
+import type { Team, Position, Candidate, ElectionSettings } from '@/lib/types';
 import { getTeamFlagUrl, getTeamAccentColor } from '@/lib/utils/helpers';
 
 function ChevronDownIcon({ className = '', style = {} }: { className?: string; style?: React.CSSProperties }) {
@@ -38,6 +39,7 @@ export default function ParticipatePage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [existingCandidate, setExistingCandidate] = useState<Candidate | null>(null);
+  const [settings, setSettings] = useState<ElectionSettings | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
   // Form states
@@ -86,15 +88,17 @@ export default function ParticipatePage() {
 
     async function loadData() {
       try {
-        const [t, pos, existing] = await Promise.all([
+        const [t, pos, existing, settingsDoc] = await Promise.all([
           getTeams(),
           getPositions(),
-          getCandidateByUid(uid)
+          getCandidateByUid(uid),
+          getElectionSettings()
         ]);
 
         setTeams(t);
         setPositions(pos);
         setExistingCandidate(existing);
+        setSettings(settingsDoc);
 
         // Prefill form if profile data exists
         if (profile) {
@@ -189,6 +193,11 @@ export default function ParticipatePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    if (settings && !settings.applicationsOpen) {
+      setError('Candidate applications are currently closed.');
+      return;
+    }
 
     if (!name.trim() || !studentId.trim() || !department.trim() || !batch.trim() || !selectedTeamId || !selectedPosId) {
       setError('Please fill in all required fields marked with *');
@@ -324,6 +333,49 @@ export default function ParticipatePage() {
           <button onClick={() => router.push('/vote')} className="btn btn-ghost">
             ← Return to Voting Booth
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // If applications are closed and user has not registered, show the closed banner
+  if (settings && !settings.applicationsOpen) {
+    return (
+      <div className="page-content" style={{ maxWidth: '640px', paddingBottom: '100px' }}>
+        <div className="section-header" style={{ textAlign: 'center', marginBottom: 'var(--space-8)' }}>
+          <div>
+            <h1>Candidate Registration Closed</h1>
+            <p className="section-sub">The registration period for election candidates is not active</p>
+          </div>
+        </div>
+
+        <div className="card" style={{ 
+          background: 'rgba(12, 19, 36, 0.45)', 
+          borderLeft: '4px solid var(--red)',
+          padding: 'var(--space-6)',
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 'var(--space-4)'
+        }}>
+          <div style={{ fontSize: '48px' }}>🔒</div>
+          <h3 style={{ margin: 0, fontSize: 'var(--text-lg)' }}>Applications are Currently Closed</h3>
+          <p style={{ 
+            fontSize: 'var(--text-sm)', 
+            color: 'var(--text-secondary)', 
+            maxWidth: '440px', 
+            margin: '0 auto',
+            lineHeight: 1.6
+          }}>
+            Thank you for your interest! The candidate registration phase for the DIU FIFA WC 2026 Election has either concluded or has not yet started.
+          </p>
+          
+          <div style={{ marginTop: 'var(--space-2)' }}>
+            <button onClick={() => router.push('/vote')} className="btn btn-primary" style={{ background: 'var(--blue)', borderColor: 'var(--blue)' }}>
+              Go to Voting Booth
+            </button>
+          </div>
         </div>
       </div>
     );

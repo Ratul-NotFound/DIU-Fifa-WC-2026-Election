@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 const POLL_INTERVAL = 5000; // 5 seconds
 
-export default function ResultsPage() {
+export default function StandingsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -112,7 +112,7 @@ export default function ResultsPage() {
       {/* Header */}
       <div className="section-header">
         <div>
-          <h1>Election Results</h1>
+          <h1>Election Standings</h1>
           <p className="section-sub">
             {settings ? statusLabel(settings.status) : '—'}
             {lastUpdated && (
@@ -129,7 +129,7 @@ export default function ResultsPage() {
 
       {settings?.status === 'draft' && (
         <div className="alert alert-info" style={{ marginBottom: 'var(--space-6)' }}>
-          Results will be visible once voting begins.
+          Standings will be visible once voting begins.
         </div>
       )}
 
@@ -183,7 +183,7 @@ export default function ResultsPage() {
       {/* Results */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
         <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600 }}>
-          {positions.find(p => p.id === selectedPos)?.title ?? 'Results'}
+          {positions.find(p => p.id === selectedPos)?.title ?? 'Standings'}
         </h2>
         <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
           {totalVotesForPos} total votes
@@ -193,7 +193,7 @@ export default function ResultsPage() {
       {currentRanked.length === 0 ? (
         <div className="empty-state">
           <span className="empty-icon">📊</span>
-          <p className="empty-title">No Results Yet</p>
+          <p className="empty-title">No Standings Yet</p>
           <p className="empty-desc">No votes have been cast for this position.</p>
         </div>
       ) : (
@@ -249,7 +249,7 @@ export default function ResultsPage() {
 
       {settings?.status === 'live' && (
         <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center', marginTop: 'var(--space-6)' }}>
-          Results auto-refresh every 5 seconds
+          Standings auto-refresh every 5 seconds
         </p>
       )}
     </div>

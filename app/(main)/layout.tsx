@@ -11,7 +11,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const pathname = usePathname();
 
-  const isPublicRoute = pathname === '/results' || pathname === '/';
+  const isPublicRoute = pathname === '/standings' || pathname === '/';
 
   useEffect(() => {
     if (!loading && !user && !isPublicRoute) {
