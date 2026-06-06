@@ -76,7 +76,30 @@ function getMockDB(): MockDB {
   const data = localStorage.getItem(MOCK_STORAGE_KEY);
   if (data) {
     try {
-      return JSON.parse(data);
+      const db = JSON.parse(data);
+      let changed = false;
+      if (db.positions) {
+        if (!db.positions['joint_secretary']) {
+          db.positions['joint_secretary'] = { id: 'joint_secretary', title: 'Joint Secretary', description: 'Assists General Secretary and handles records.', maxWinners: 2, order: 5 };
+          changed = true;
+        }
+        if (!db.positions['press_secretary']) {
+          db.positions['press_secretary'] = { id: 'press_secretary', title: 'Press Secretary', description: 'Manages media communications and press releases.', maxWinners: 1, order: 6 };
+          changed = true;
+        }
+        if (!db.positions['publicity_secretary']) {
+          db.positions['publicity_secretary'] = { id: 'publicity_secretary', title: 'Publicity Secretary', description: 'Handles promotion and public relations.', maxWinners: 1, order: 7 };
+          changed = true;
+        }
+        if (!db.positions['executive_member']) {
+          db.positions['executive_member'] = { id: 'executive_member', title: 'Executive Member', description: 'Participates in committee decisions and tasks.', maxWinners: 3, order: 8 };
+          changed = true;
+        }
+      }
+      if (changed) {
+        localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(db));
+      }
+      return db;
     } catch {
       // ignore
     }
@@ -106,6 +129,10 @@ function getMockDB(): MockDB {
       'vp': { id: 'vp', title: 'Vice President', description: 'Supports the President and manages operations.', maxWinners: 1, order: 2 },
       'secretary': { id: 'secretary', title: 'General Secretary', description: 'Manages correspondence and documentation.', maxWinners: 1, order: 3 },
       'organizing': { id: 'organizing', title: 'Organizing Secretary', description: 'Coordinates events and logistics.', maxWinners: 1, order: 4 },
+      'joint_secretary': { id: 'joint_secretary', title: 'Joint Secretary', description: 'Assists General Secretary and handles records.', maxWinners: 2, order: 5 },
+      'press_secretary': { id: 'press_secretary', title: 'Press Secretary', description: 'Manages media communications and press releases.', maxWinners: 1, order: 6 },
+      'publicity_secretary': { id: 'publicity_secretary', title: 'Publicity Secretary', description: 'Handles promotion and public relations.', maxWinners: 1, order: 7 },
+      'executive_member': { id: 'executive_member', title: 'Executive Member', description: 'Participates in committee decisions and tasks.', maxWinners: 3, order: 8 },
     },
     candidates: {
       'cand1': { id: 'cand1', uid: 'u1', name: 'Al-Amin Rahman', studentId: '201-15-1234', department: 'CSE', batch: '55th', team: 'br', position: 'president', manifesto: 'Committed to organizing regular schedules and student team-building sessions.', photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=256&h=256&q=80', approved: true, votesReceived: 12, createdAt: Date.now() },
@@ -248,12 +275,53 @@ export async function deleteTeam(id: string): Promise<void> {
 // POSITIONS
 // ══════════════════════════════════════════════════════════
 
+let positionsSeedingPromise: Promise<Position[]> | null = null;
+
 export async function getPositions(): Promise<Position[]> {
   if (!dbReady()) {
     return Object.values(getMockDB().positions).sort((a, b) => a.order - b.order);
   }
-  const snap = await getDocs(query(collection(db, 'positions'), orderBy('order')));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Position));
+
+  if (positionsSeedingPromise) {
+    return positionsSeedingPromise;
+  }
+
+  positionsSeedingPromise = (async () => {
+    const snap = await getDocs(query(collection(db, 'positions'), orderBy('order')));
+    const list = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Position));
+
+    const defaultPositions = [
+      { title: 'President', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
+      { title: 'Vice President', description: 'Supports the President and manages operations.', maxWinners: 1, order: 2 },
+      { title: 'General Secretary', description: 'Manages correspondence and documentation.', maxWinners: 1, order: 3 },
+      { title: 'Organizing Secretary', description: 'Coordinates events and logistics.', maxWinners: 1, order: 4 },
+      { title: 'Joint Secretary', description: 'Assists General Secretary and handles records.', maxWinners: 2, order: 5 },
+      { title: 'Press Secretary', description: 'Manages media communications and press releases.', maxWinners: 1, order: 6 },
+      { title: 'Publicity Secretary', description: 'Handles promotion and public relations.', maxWinners: 1, order: 7 },
+      { title: 'Executive Member', description: 'Participates in committee decisions and tasks.', maxWinners: 3, order: 8 },
+    ];
+
+    let newlyAdded = false;
+    for (const pos of defaultPositions) {
+      const exists = list.some(p => p.title.toLowerCase() === pos.title.toLowerCase());
+      if (!exists) {
+        const id = await createPosition(pos);
+        list.push({ id, ...pos });
+        newlyAdded = true;
+      }
+    }
+
+    if (newlyAdded) {
+      list.sort((a, b) => a.order - b.order);
+    }
+    return list;
+  })();
+
+  try {
+    return await positionsSeedingPromise;
+  } finally {
+    positionsSeedingPromise = null;
+  }
 }
 
 export async function createPosition(pos: Omit<Position, 'id'>): Promise<string> {
@@ -733,14 +801,19 @@ export async function seedDefaultElectionData(): Promise<{ teamsSeeded: number; 
     }
 
     let positionsSeeded = 0;
-    if (Object.keys(mock.positions).length === 0) {
-      const defaultPositions = [
-        { id: 'president', title: 'President', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
-        { id: 'vp', title: 'Vice President', description: 'Supports the President and manages operations.', maxWinners: 1, order: 2 },
-        { id: 'secretary', title: 'General Secretary', description: 'Manages correspondence and documentation.', maxWinners: 1, order: 3 },
-        { id: 'organizing', title: 'Organizing Secretary', description: 'Coordinates events and logistics.', maxWinners: 1, order: 4 },
-      ];
-      for (const pos of defaultPositions) {
+    const defaultPositions = [
+      { id: 'president', title: 'President', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
+      { id: 'vp', title: 'Vice President', description: 'Supports the President and manages operations.', maxWinners: 1, order: 2 },
+      { id: 'secretary', title: 'General Secretary', description: 'Manages correspondence and documentation.', maxWinners: 1, order: 3 },
+      { id: 'organizing', title: 'Organizing Secretary', description: 'Coordinates events and logistics.', maxWinners: 1, order: 4 },
+      { id: 'joint_secretary', title: 'Joint Secretary', description: 'Assists General Secretary and handles records.', maxWinners: 2, order: 5 },
+      { id: 'press_secretary', title: 'Press Secretary', description: 'Manages media communications and press releases.', maxWinners: 1, order: 6 },
+      { id: 'publicity_secretary', title: 'Publicity Secretary', description: 'Handles promotion and public relations.', maxWinners: 1, order: 7 },
+      { id: 'executive_member', title: 'Executive Member', description: 'Participates in committee decisions and tasks.', maxWinners: 3, order: 8 },
+    ];
+    for (const pos of defaultPositions) {
+      const exists = Object.values(mock.positions).some(p => p.title.toLowerCase() === pos.title.toLowerCase());
+      if (!exists) {
         mock.positions[pos.id] = pos;
         positionsSeeded++;
       }
@@ -749,44 +822,50 @@ export async function seedDefaultElectionData(): Promise<{ teamsSeeded: number; 
     return { teamsSeeded, positionsSeeded };
   }
   
-  // 1. Seed Teams if empty
+  // 1. Seed Teams if they do not exist
   const currentTeams = await getTeams();
   let teamsSeeded = 0;
-  if (currentTeams.length === 0) {
-    const defaultTeams = [
-      { name: 'Mexico (Co-host)', flag: '🇲🇽', description: 'Co-host of the FIFA World Cup 2026.' },
-      { name: 'Canada (Co-host)', flag: '🇨🇦', description: 'Co-host of the FIFA World Cup 2026.' },
-      { name: 'South Africa', flag: '🇿🇦', description: '2010 FIFA World Cup hosts.' },
-      { name: 'South Korea', flag: '🇰🇷', description: 'Tigers of Asia.' },
-      { name: 'Paraguay', flag: '🇵🇾', description: 'La Albirroja.' },
-      { name: 'Germany', flag: '🇩🇪', description: '4-time World Cup winners.' },
-      { name: 'Netherlands', flag: '🇳🇱', description: 'Oranje, 3-time runners up.' },
-      { name: 'Belgium', flag: '🇧🇪', description: 'The Red Devils.' },
-      { name: 'Spain', flag: '🇪🇸', description: '2010 World Cup champions.' },
-      { name: 'Portugal', flag: '🇵🇹', description: 'A Seleção.' },
-      { name: 'Brazil', flag: '🇧🇷', description: '5-time World Cup champions.' },
-      { name: 'Argentina', flag: '🇦🇷', description: 'Defending World Cup champions.' },
-      { name: 'France', flag: '🇫🇷', description: '2-time World Cup champions.' },
-      { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', description: '1966 World Cup champions.' },
-      { name: 'Morocco', flag: '🇲🇦', description: 'Atlas Lions, 2022 semi-finalists.' },
-    ];
-    for (const team of defaultTeams) {
+  const defaultTeams = [
+    { name: 'Mexico (Co-host)', flag: '🇲🇽', description: 'Co-host of the FIFA World Cup 2026.' },
+    { name: 'Canada (Co-host)', flag: '🇨🇦', description: 'Co-host of the FIFA World Cup 2026.' },
+    { name: 'South Africa', flag: '🇿🇦', description: '2010 FIFA World Cup hosts.' },
+    { name: 'South Korea', flag: '🇰🇷', description: 'Tigers of Asia.' },
+    { name: 'Paraguay', flag: '🇵🇾', description: 'La Albirroja.' },
+    { name: 'Germany', flag: '🇩🇪', description: '4-time World Cup winners.' },
+    { name: 'Netherlands', flag: '🇳🇱', description: 'Oranje, 3-time runners up.' },
+    { name: 'Belgium', flag: '🇧🇪', description: 'The Red Devils.' },
+    { name: 'Spain', flag: '🇪🇸', description: '2010 World Cup champions.' },
+    { name: 'Portugal', flag: '🇵🇹', description: 'A Seleção.' },
+    { name: 'Brazil', flag: '🇧🇷', description: '5-time World Cup champions.' },
+    { name: 'Argentina', flag: '🇦🇷', description: 'Defending World Cup champions.' },
+    { name: 'France', flag: '🇫🇷', description: '2-time World Cup champions.' },
+    { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', description: '1966 World Cup champions.' },
+    { name: 'Morocco', flag: '🇲🇦', description: 'Atlas Lions, 2022 semi-finalists.' },
+  ];
+  for (const team of defaultTeams) {
+    const exists = currentTeams.some(t => t.name.toLowerCase() === team.name.toLowerCase());
+    if (!exists) {
       await createTeam({ ...team, logo: '', banner: '', createdAt: Date.now() });
       teamsSeeded++;
     }
   }
 
-  // 2. Seed Positions if empty
+  // 2. Seed Positions if they do not exist
   const currentPositions = await getPositions();
   let positionsSeeded = 0;
-  if (currentPositions.length === 0) {
-    const defaultPositions = [
-      { title: 'President', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
-      { title: 'Vice President', description: 'Supports the President and manages operations.', maxWinners: 1, order: 2 },
-      { title: 'General Secretary', description: 'Manages correspondence and documentation.', maxWinners: 1, order: 3 },
-      { title: 'Organizing Secretary', description: 'Coordinates events and logistics.', maxWinners: 1, order: 4 },
-    ];
-    for (const pos of defaultPositions) {
+  const defaultPositions = [
+    { title: 'President', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
+    { title: 'Vice President', description: 'Supports the President and manages operations.', maxWinners: 1, order: 2 },
+    { title: 'General Secretary', description: 'Manages correspondence and documentation.', maxWinners: 1, order: 3 },
+    { title: 'Organizing Secretary', description: 'Coordinates events and logistics.', maxWinners: 1, order: 4 },
+    { title: 'Joint Secretary', description: 'Assists General Secretary and handles records.', maxWinners: 2, order: 5 },
+    { title: 'Press Secretary', description: 'Manages media communications and press releases.', maxWinners: 1, order: 6 },
+    { title: 'Publicity Secretary', description: 'Handles promotion and public relations.', maxWinners: 1, order: 7 },
+    { title: 'Executive Member', description: 'Participates in committee decisions and tasks.', maxWinners: 3, order: 8 },
+  ];
+  for (const pos of defaultPositions) {
+    const exists = currentPositions.some(p => p.title.toLowerCase() === pos.title.toLowerCase());
+    if (!exists) {
       await createPosition(pos);
       positionsSeeded++;
     }

@@ -20,7 +20,7 @@ export default function AdminOverview() {
   const [seeding, setSeeding] = useState(false);
 
   const handleSeed = async () => {
-    if (!confirm('This will seed the 15 standard FIFA World Cup teams and 4 default positions if none exist. Continue?')) return;
+    if (!confirm('This will seed any missing standard FIFA World Cup teams and the 8 default positions. Continue?')) return;
     setSeeding(true);
     try {
       const res = await seedDefaultElectionData();
