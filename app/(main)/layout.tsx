@@ -15,9 +15,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     if (!loading && !user && !isPublicRoute) {
-      router.replace('/login');
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [user, loading, router, isPublicRoute]);
+  }, [user, loading, router, isPublicRoute, pathname]);
 
   if (loading) {
     return (

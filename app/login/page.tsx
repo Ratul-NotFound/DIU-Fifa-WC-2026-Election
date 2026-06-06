@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithGoogle } from '@/lib/firebase/auth';
 import FootballLogo from '@/components/layout/FootballLogo';
 import { useAuth } from '@/lib/context/AuthContext';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect') || '/dashboard';
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -17,9 +19,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.replace('/dashboard');
+      router.replace(redirect);
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, redirect]);
 
   const handleGoogle = async () => {
     clearMessages();
@@ -69,5 +71,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="loading-center" style={{ minHeight: '100vh' }}><div className="spinner spinner-lg" /></div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

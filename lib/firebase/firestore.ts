@@ -27,8 +27,15 @@ import type {
   Vote,
 } from '@/lib/types';
 
+let testMode = false;
+
+export function setTestMode(val: boolean) {
+  testMode = val;
+}
+
 // Guard: return early when Firebase is not configured (build time / missing .env)
 function dbReady(): boolean {
+  if (testMode) return false;
   return Boolean(db);
 }
 
@@ -51,16 +58,20 @@ interface MockDB {
 
 function getMockDB(): MockDB {
   if (typeof window === 'undefined') {
-    return {
-      users: {},
-      teams: {},
-      positions: {},
-      candidates: {},
-      votes: {},
-      results: {},
-      settings: { status: 'draft', votingStart: null, votingEnd: null, updatedAt: Date.now(), updatedBy: 'system' },
-      logs: []
-    };
+    const g = global as any;
+    if (!g._diuFifaMockDb) {
+      g._diuFifaMockDb = {
+        users: {},
+        teams: {},
+        positions: {},
+        candidates: {},
+        votes: {},
+        results: {},
+        settings: { status: 'draft', votingStart: null, votingEnd: null, updatedAt: Date.now(), updatedBy: 'system' },
+        logs: []
+      };
+    }
+    return g._diuFifaMockDb;
   }
   const data = localStorage.getItem(MOCK_STORAGE_KEY);
   if (data) {
@@ -117,7 +128,11 @@ function getMockDB(): MockDB {
 }
 
 function saveMockDB(dbData: MockDB) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    const g = global as any;
+    g._diuFifaMockDb = dbData;
+    return;
+  }
   localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(dbData));
 }
 
@@ -569,7 +584,13 @@ export async function castVote(
         ? (resultsSnap.data()?.totalVotes ?? 0)
         : 0;
 
-      // 3. Write vote record (deterministic ID)
+      // 3. Read candidate state
+      const candidateRef = doc(db, 'candidates', candidateId);
+      const candidateSnap = await transaction.get(candidateRef);
+
+      // ──── ALL READS COMPLETED. BEGIN WRITES ────
+
+      // 4. Write vote record (deterministic ID)
       const voteDocId = `${voterUid}_${teamId}_${positionId}`;
       const voteRef = doc(db, 'votes', voteDocId);
       transaction.set(voteRef, {
@@ -580,7 +601,7 @@ export async function castVote(
         timestamp: Date.now(),
       });
 
-      // 4. Update aggregated results (1 write)
+      // 5. Update aggregated results (1 write)
       transaction.set(resultsRef, {
         teamId,
         positionId,
@@ -592,14 +613,12 @@ export async function castVote(
         updatedAt: Date.now(),
       });
 
-      // 5. Mark user as voted for this position
+      // 6. Mark user as voted for this position
       transaction.update(userRef, {
         votedPositions: [...(userData.votedPositions ?? []), voteKeyVal],
       });
 
-      // 6. Increment candidate vote counter
-      const candidateRef = doc(db, 'candidates', candidateId);
-      const candidateSnap = await transaction.get(candidateRef);
+      // 7. Increment candidate vote counter
       if (candidateSnap.exists()) {
         transaction.update(candidateRef, {
           votesReceived: (candidateSnap.data()?.votesReceived ?? 0) + 1,
@@ -675,8 +694,48 @@ export async function setUserRole(uid: string, role: UserProfile['role']): Promi
 
 export async function seedDefaultElectionData(): Promise<{ teamsSeeded: number; positionsSeeded: number }> {
   if (!dbReady()) {
-    // Already pre-seeded in MockDB initialization
-    return { teamsSeeded: 15, positionsSeeded: 4 };
+    const mock = getMockDB();
+    let teamsSeeded = 0;
+    if (Object.keys(mock.teams).length === 0) {
+      const defaultTeams = [
+        { name: 'Mexico (Co-host)', flag: '🇲🇽', description: 'Co-host of the FIFA World Cup 2026.' },
+        { name: 'Canada (Co-host)', flag: '🇨🇦', description: 'Co-host of the FIFA World Cup 2026.' },
+        { name: 'South Africa', flag: '🇿🇦', description: '2010 FIFA World Cup hosts.' },
+        { name: 'South Korea', flag: '🇰🇷', description: 'Tigers of Asia.' },
+        { name: 'Paraguay', flag: '🇵🇾', description: 'La Albirroja.' },
+        { name: 'Germany', flag: '🇩🇪', description: '4-time World Cup winners.' },
+        { name: 'Netherlands', flag: '🇳🇱', description: 'Oranje, 3-time runners up.' },
+        { name: 'Belgium', flag: '🇧🇪', description: 'The Red Devils.' },
+        { name: 'Spain', flag: '🇪🇸', description: '2010 World Cup champions.' },
+        { name: 'Portugal', flag: '🇵🇹', description: 'A Seleção.' },
+        { name: 'Brazil', flag: '🇧🇷', description: '5-time World Cup champions.' },
+        { name: 'Argentina', flag: '🇦🇷', description: 'Defending World Cup champions.' },
+        { name: 'France', flag: '🇫🇷', description: '2-time World Cup champions.' },
+        { name: 'England', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', description: '1966 World Cup champions.' },
+        { name: 'Morocco', flag: '🇲🇦', description: 'Atlas Lions, 2022 semi-finalists.' },
+      ];
+      for (const team of defaultTeams) {
+        const id = team.name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).slice(2, 6);
+        mock.teams[id] = { id, ...team, logo: '', banner: '', createdAt: Date.now() };
+        teamsSeeded++;
+      }
+    }
+
+    let positionsSeeded = 0;
+    if (Object.keys(mock.positions).length === 0) {
+      const defaultPositions = [
+        { id: 'president', title: 'President', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
+        { id: 'vp', title: 'Vice President', description: 'Supports the President and manages operations.', maxWinners: 1, order: 2 },
+        { id: 'secretary', title: 'General Secretary', description: 'Manages correspondence and documentation.', maxWinners: 1, order: 3 },
+        { id: 'organizing', title: 'Organizing Secretary', description: 'Coordinates events and logistics.', maxWinners: 1, order: 4 },
+      ];
+      for (const pos of defaultPositions) {
+        mock.positions[pos.id] = pos;
+        positionsSeeded++;
+      }
+    }
+    saveMockDB(mock);
+    return { teamsSeeded, positionsSeeded };
   }
   
   // 1. Seed Teams if empty

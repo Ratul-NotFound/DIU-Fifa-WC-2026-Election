@@ -118,7 +118,7 @@ export default function DashboardPage() {
           return (
             <Link
               key={team.id}
-              href={`/vote/${team.id}`}
+              href={`/vote?team=${team.id}`}
               className="team-card"
               style={{ 
                 '--team-accent': getTeamAccentColor(team.name),

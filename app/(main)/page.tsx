@@ -54,18 +54,18 @@ export default async function LandingPage() {
                 <span>DIU FIFA COMMUNITY PORTAL</span>
               </div>
               <h1 className="hero-title" style={{ maxWidth: '680px' }}>
-                The Hub for Daffodil International University FIFA World Cup
+                DIU FIFA Committee Elections 2026
               </h1>
               <p className="hero-sub" style={{ maxWidth: '600px', marginBottom: 'var(--space-6)' }}>
-                Connect with football enthusiasts, compete in local campus tournaments, and participate in the 2026 Committee Elections.
+                Cast your vote for your national division committee representatives in real-time. Ensure you are signed in with your verified student account to enter the voting booth.
               </p>
               <div className="hero-actions">
-                <a href="#portal-hub" className="btn btn-primary btn-lg">
-                  Explore Community
-                </a>
-                <a href="#election-hub" className="btn btn-ghost btn-lg" style={{ background: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  Go to Election
-                </a>
+                <Link href="/vote" className="btn btn-primary btn-lg">
+                  Enter Voting
+                </Link>
+                <Link href="/vote" className="btn btn-ghost btn-lg" style={{ background: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                  Participate in Voting
+                </Link>
               </div>
             </div>
 

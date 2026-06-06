@@ -106,19 +106,6 @@ export default function Footer() {
         </div>
 
       </div>
-
-      {/* Bottom Bar */}
-      <div className="footer-bottom">
-        <div className="container footer-bottom-inner">
-          <p className="footer-copyright">
-            &copy; {new Date().getFullYear()} DIU FIFA Community Portal · Daffodil International University
-          </p>
-          <div className="footer-bottom-links">
-            <span className="badge badge-blue">Official Club</span>
-            <span className="badge badge-green">System Online</span>
-          </div>
-        </div>
-      </div>
     </footer>
   );
 }
