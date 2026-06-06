@@ -14,6 +14,24 @@ import {
 import type { Team, Position, Candidate, ElectionSettings } from '@/lib/types';
 import { truncate, getTeamFlagUrl, getTeamAccentColor, statusLabel } from '@/lib/utils/helpers';
 
+function ChevronDownIcon({ className = '', style = {} }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2.5" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+      style={{ width: '12px', height: '12px', ...style }}
+    >
+      <path d="m6 9 6 6 6-6"/>
+    </svg>
+  );
+}
+
 function VoteBoothContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,6 +53,26 @@ function VoteBoothContent() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [pendingVote, setPendingVote] = useState<{ posId: string; candId: string } | null>(null);
+
+  // Custom Dropdowns Toggle States
+  const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
+  const [posDropdownOpen, setPosDropdownOpen] = useState(false);
+  const [teamSearchQuery, setTeamSearchQuery] = useState('');
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    if (!teamDropdownOpen) return;
+    const handleOutsideClick = () => setTeamDropdownOpen(false);
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [teamDropdownOpen]);
+
+  useEffect(() => {
+    if (!posDropdownOpen) return;
+    const handleOutsideClick = () => setPosDropdownOpen(false);
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [posDropdownOpen]);
 
   // Load initial static datasets: Teams, Positions, and settings
   useEffect(() => {
@@ -89,19 +127,6 @@ function VoteBoothContent() {
     loadCandidatesAndVotes();
   }, [selectedTeamId, user, positions]);
 
-  const handleTeamChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newTeamId = e.target.value;
-    setSelectedTeamId(newTeamId);
-    // Update the URL search parameters to preserve history / deep-linking
-    const params = new URLSearchParams(searchParams.toString());
-    if (newTeamId) {
-      params.set('team', newTeamId);
-    } else {
-      params.delete('team');
-    }
-    router.replace(`/vote?${params.toString()}`);
-  };
-
   const hasVotedFor = useCallback(
     (posId: string) => !!selectedVotes[posId],
     [selectedVotes]
@@ -110,6 +135,10 @@ function VoteBoothContent() {
   const currentCandidates = candidates.filter(c => c.position === activePos);
   const selectedTeam = teams.find(t => t.id === selectedTeamId);
   const accentColor = selectedTeam ? getTeamAccentColor(selectedTeam.name) : 'var(--blue)';
+
+  const filteredTeams = teams.filter(t =>
+    t.name.toLowerCase().includes(teamSearchQuery.toLowerCase())
+  );
 
   const handleSelect = (posId: string, candId: string) => {
     if (hasVotedFor(posId) || submitting) return;
@@ -182,38 +211,116 @@ function VoteBoothContent() {
       )}
 
       {/* ── Dropdown Team Selection ── */}
-      <div className="card" style={{ marginBottom: 'var(--space-6)', background: 'rgba(12, 19, 36, 0.45)' }}>
+      <div className="card" style={{ marginBottom: 'var(--space-6)', background: 'rgba(12, 19, 36, 0.45)', position: 'relative', zIndex: 20 }}>
         <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label" htmlFor="booth-team-select" style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+          <label className="form-label" style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
             Select Team
           </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            {selectedTeam && (
-              <img 
-                src={getTeamFlagUrl(selectedTeam.flag)} 
-                alt={selectedTeam.name} 
-                className="flag-circular" 
-                style={{ 
-                  width: '32px', 
-                  height: '32px',
-                  border: `2px solid ${accentColor}`,
-                  boxShadow: `0 0 10px ${accentColor}33`
-                }} 
-              />
-            )}
-            <select
-              id="booth-team-select"
-              className="form-input"
-              value={selectedTeamId}
-              onChange={handleTeamChange}
-              style={{ flex: 1, paddingRight: '40px', backgroundPosition: 'right 16px center' }}
+          
+          <div className="custom-select-wrapper" style={{
+            '--theme-accent': accentColor,
+            '--theme-accent-glow': `${accentColor}33`
+          } as React.CSSProperties}>
+            <button
+              type="button"
+              className={`custom-select-trigger${teamDropdownOpen ? ' active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setTeamDropdownOpen(!teamDropdownOpen);
+                setTeamSearchQuery('');
+              }}
             >
-              {teams.map(t => (
-                <option key={t.id} value={t.id}>
-                  {t.flag} {t.name}
-                </option>
-              ))}
-            </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                {selectedTeam ? (
+                  <>
+                    <img 
+                      src={getTeamFlagUrl(selectedTeam.flag)} 
+                      alt={selectedTeam.name} 
+                      className="flag-circular" 
+                      style={{ 
+                        width: '24px', 
+                        height: '24px',
+                        border: `2px solid ${accentColor}`,
+                        boxShadow: `0 0 8px ${accentColor}22`
+                      }} 
+                    />
+                    <span style={{ fontWeight: 600 }}>{selectedTeam.name}</span>
+                  </>
+                ) : (
+                  <span style={{ color: 'var(--text-muted)' }}>Select a team…</span>
+                )}
+              </div>
+              <span className="custom-select-arrow">
+                <ChevronDownIcon />
+              </span>
+            </button>
+
+            <div className={`custom-select-menu${teamDropdownOpen ? ' open' : ''}`} onClick={(e) => e.stopPropagation()}>
+              <div className="custom-select-search-wrapper">
+                <span className="custom-select-search-icon">🔍</span>
+                <input
+                  type="text"
+                  className="custom-select-search-input"
+                  placeholder="Search team..."
+                  value={teamSearchQuery}
+                  onChange={(e) => setTeamSearchQuery(e.target.value)}
+                  autoFocus={teamDropdownOpen}
+                />
+                {teamSearchQuery && (
+                  <button 
+                    type="button" 
+                    onClick={() => setTeamSearchQuery('')}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 'var(--text-xs)', padding: '0 4px' }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              <div className="custom-select-options">
+                {filteredTeams.length === 0 ? (
+                  <div className="custom-select-empty">No teams found</div>
+                ) : (
+                  filteredTeams.map(t => {
+                    const isCurrent = t.id === selectedTeamId;
+                    const tAccent = getTeamAccentColor(t.name);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className={`custom-select-option${isCurrent ? ' selected' : ''}`}
+                        onClick={() => {
+                          setSelectedTeamId(t.id);
+                          setTeamDropdownOpen(false);
+                          setTeamSearchQuery('');
+                          const params = new URLSearchParams(searchParams.toString());
+                          params.set('team', t.id);
+                          router.replace(`/vote?${params.toString()}`);
+                        }}
+                        style={{
+                          '--theme-accent': tAccent
+                        } as React.CSSProperties}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                          <img 
+                            src={getTeamFlagUrl(t.flag)} 
+                            alt={t.name} 
+                            className="flag-circular" 
+                            style={{ 
+                              width: '20px', 
+                              height: '20px',
+                              border: `1.5px solid ${tAccent}`
+                            }} 
+                          />
+                          <span style={{ fontWeight: isCurrent ? 600 : 500 }}>{t.name}</span>
+                        </div>
+                        {isCurrent && <span style={{ color: tAccent, fontSize: 'var(--text-sm)' }}>✓</span>}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -225,8 +332,63 @@ function VoteBoothContent() {
         </div>
       ) : selectedTeamId ? (
         <>
-          {/* ── Position Selection Tabs ── */}
-          <div className="position-selector" style={{ marginBottom: 'var(--space-6)' }}>
+          {/* ── Position Selection Dropdown (Mobile) ── */}
+          <div className="position-dropdown-mobile" style={{ marginBottom: 'var(--space-5)' }}>
+            <div className="custom-select-wrapper" style={{
+              '--theme-accent': accentColor,
+              '--theme-accent-glow': `${accentColor}33`
+            } as React.CSSProperties}>
+              <button
+                type="button"
+                className={`custom-select-trigger${posDropdownOpen ? ' active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPosDropdownOpen(!posDropdownOpen);
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <span style={{ fontWeight: 600 }}>
+                    {positions.find(p => p.id === activePos)?.title || 'Select Position'}
+                  </span>
+                  {hasVotedFor(activePos) && (
+                    <span className="badge badge-green" style={{ fontSize: '9px', padding: '2px 6px' }}>✓ Voted</span>
+                  )}
+                </div>
+                <span className="custom-select-arrow">
+                  <ChevronDownIcon />
+                </span>
+              </button>
+
+              <div className={`custom-select-menu${posDropdownOpen ? ' open' : ''}`}>
+                <div className="custom-select-options">
+                  {positions.map(pos => {
+                    const voted = hasVotedFor(pos.id);
+                    const isCurrent = pos.id === activePos;
+                    return (
+                      <button
+                        key={pos.id}
+                        type="button"
+                        className={`custom-select-option${isCurrent ? ' selected' : ''}`}
+                        onClick={() => {
+                          setActivePos(pos.id);
+                          setPosDropdownOpen(false);
+                        }}
+                      >
+                        <span style={{ fontWeight: isCurrent ? 600 : 500 }}>{pos.title}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                          {voted && <span className="badge badge-green" style={{ fontSize: '9px' }}>✓ Voted</span>}
+                          {isCurrent && <span style={{ color: accentColor }}>✓</span>}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Position Selection Tabs (Desktop/Tablet) ── */}
+          <div className="position-tabs-desktop" style={{ marginBottom: 'var(--space-6)' }}>
             {positions.map(pos => {
               const voted = hasVotedFor(pos.id);
               const isActive = activePos === pos.id;
@@ -235,7 +397,7 @@ function VoteBoothContent() {
                   key={pos.id}
                   className={`position-tab${isActive ? ' active' : ''}${voted ? ' voted' : ''}`}
                   onClick={() => setActivePos(pos.id)}
-                  id={`pos-tab-${pos.id}`}
+                  id={`pos-tab-${pos.id}-desktop`}
                   style={{
                     borderBottomColor: isActive ? accentColor : undefined,
                     color: isActive ? 'var(--text-primary)' : undefined,

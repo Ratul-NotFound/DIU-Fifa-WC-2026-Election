@@ -29,7 +29,7 @@ function LoginPageContent() {
     const res = await signInWithGoogle();
     setLoading(false);
     if (res.success) {
-      router.push('/dashboard');
+      router.push(redirect);
     } else {
       setError(res.error || 'Sign-in failed.');
     }

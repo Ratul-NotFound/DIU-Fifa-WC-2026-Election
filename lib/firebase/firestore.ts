@@ -316,6 +316,17 @@ export async function getAllCandidates(): Promise<Candidate[]> {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Candidate));
 }
 
+export async function getCandidateByUid(uid: string): Promise<Candidate | null> {
+  if (!dbReady()) {
+    const list = Object.values(getMockDB().candidates);
+    return list.find(c => c.uid === uid) ?? null;
+  }
+  const q = query(collection(db, 'candidates'), where('uid', '==', uid));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return { id: snap.docs[0].id, ...snap.docs[0].data() } as Candidate;
+}
+
 export async function getApprovedCandidates(): Promise<Candidate[]> {
   if (!dbReady()) {
     return Object.values(getMockDB().candidates).filter(c => c.approved);

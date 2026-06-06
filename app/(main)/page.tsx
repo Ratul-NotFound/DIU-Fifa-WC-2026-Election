@@ -59,12 +59,17 @@ export default async function LandingPage() {
               <p className="hero-sub" style={{ maxWidth: '600px', marginBottom: 'var(--space-6)' }}>
                 Cast your vote for your national division committee representatives in real-time. Ensure you are signed in with your verified student account to enter the voting booth.
               </p>
-              <div className="hero-actions">
-                <Link href="/vote" className="btn btn-primary btn-lg">
-                  Enter Voting
+              <div className="hero-actions" style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
+                <Link href="/vote" className="btn btn-primary btn-lg" style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}>
+                  🗳️ Enter Voting Booth
                 </Link>
-                <Link href="/vote" className="btn btn-ghost btn-lg" style={{ background: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  Participate in Voting
+                <Link href="/participate" className="btn btn-ghost btn-lg" style={{ 
+                  border: '1.5px solid var(--fifa-purple)', 
+                  color: '#ffffff', 
+                  background: 'rgba(139, 92, 246, 0.08)',
+                  boxShadow: '0 0 15px rgba(139, 92, 246, 0.15)'
+                }}>
+                  📢 Run as Candidate
                 </Link>
               </div>
             </div>
