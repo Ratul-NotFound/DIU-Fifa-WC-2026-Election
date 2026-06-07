@@ -7,6 +7,9 @@ import { logout } from '@/lib/firebase/auth';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/context/LanguageContext';
+import { getTeams } from '@/lib/firebase/firestore';
+import { getTeamFlagUrl } from '@/lib/utils/helpers';
+import type { Team } from '@/lib/types';
 import FootballLogo from './FootballLogo';
 
 const navLinks = [
@@ -22,6 +25,7 @@ export default function Navbar() {
   const router = useRouter();
   const [isAtTop, setIsAtTop] = React.useState(true);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [teams, setTeams] = React.useState<Team[]>([]);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -31,6 +35,12 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  React.useEffect(() => {
+    if (user) {
+      getTeams().then(setTeams).catch(console.error);
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();
@@ -42,6 +52,9 @@ export default function Navbar() {
     : user?.email?.[0]?.toUpperCase() ?? '?';
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'superAdmin';
+
+  const favoriteTeamObj = teams.find(t => t.id === profile?.favoriteTeam);
+  const teamFlag = favoriteTeamObj?.flag || '';
 
   return (
     <>
@@ -56,6 +69,12 @@ export default function Navbar() {
 
           {/* Desktop links */}
           <div className="navbar-links">
+            <Link
+              href="/"
+              className={`navbar-link${pathname === '/' ? ' active' : ''}`}
+            >
+              {t.navHome}
+            </Link>
             {user ? (
               <>
                 <Link
@@ -118,13 +137,42 @@ export default function Navbar() {
             </button>
 
             {user ? (
-              <Link href="/profile" className="avatar" title={profile?.name || user.email || ''} style={{ textDecoration: 'none' }}>
-                {user.photoURL ? (
-                  <img src={user.photoURL} alt="Profile" />
-                ) : (
-                  initials
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                {teamFlag && (
+                  <Link
+                    href="/profile"
+                    title={favoriteTeamObj ? `${favoriteTeamObj.name} Fan` : ''}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      textDecoration: 'none',
+                      transition: 'transform 0.2s ease',
+                      marginRight: '2px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    <img 
+                      src={getTeamFlagUrl(teamFlag)} 
+                      alt={favoriteTeamObj?.name || ''} 
+                      style={{ 
+                        width: '24px', 
+                        height: '24px', 
+                        borderRadius: '50%', 
+                        objectFit: 'cover',
+                        border: '1.5px solid rgba(255, 255, 255, 0.2)'
+                      }} 
+                    />
+                  </Link>
                 )}
-              </Link>
+                <Link href="/profile" className="avatar" title={profile?.name || user.email || ''} style={{ textDecoration: 'none' }}>
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="Profile" />
+                  ) : (
+                    initials
+                  )}
+                </Link>
+              </div>
             ) : (
               <Link href="/login" className="btn btn-primary btn-sm">
                 {t.navSignIn}
@@ -178,7 +226,22 @@ export default function Navbar() {
               </Link>
               <div>
                 <Link href="/profile" style={{ textDecoration: 'none', color: 'inherit' }} onClick={() => setDrawerOpen(false)}>
-                  <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>{profile.name || 'Student'}</p>
+                  <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {profile.name || 'Student'}
+                    {teamFlag && (
+                      <img 
+                        src={getTeamFlagUrl(teamFlag)} 
+                        alt={favoriteTeamObj?.name || ''} 
+                        style={{ 
+                          width: '18px', 
+                          height: '18px', 
+                          borderRadius: '50%', 
+                          objectFit: 'cover',
+                          border: '1px solid rgba(255, 255, 255, 0.15)'
+                        }} 
+                      />
+                    )}
+                  </p>
                   <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{profile.email}</p>
                 </Link>
               </div>
@@ -191,6 +254,13 @@ export default function Navbar() {
         )}
 
         <nav className="drawer-nav">
+          <Link
+            href="/"
+            className={`drawer-link${pathname === '/' ? ' active' : ''}`}
+            onClick={() => setDrawerOpen(false)}
+          >
+            🏠 {t.navHome}
+          </Link>
           {user ? (
             <>
               <Link

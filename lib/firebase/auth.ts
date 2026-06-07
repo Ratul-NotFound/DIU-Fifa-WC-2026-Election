@@ -232,21 +232,57 @@ export function onAuthChange(callback: (user: User | null) => void): () => void 
   });
 }
 
+// Helper to parse student ID and calculate batch from DIU email prefix
+function parseStudentIdAndBatch(emailPrefix: string): { studentId: string; batch: string } {
+  // If it's already in format 201-15-5678, return it
+  if (/^\d{2,3}-\d{2,3}-\d{4,6}$/.test(emailPrefix)) {
+    const parts = emailPrefix.split('-');
+    const part1 = parts[0];
+    const year = parseInt(part1.slice(0, 2), 10);
+    const sem = parseInt(part1.slice(2, 3), 10);
+    let calculatedBatch = '55th';
+    if (!isNaN(year) && !isNaN(sem) && sem >= 1 && sem <= 3) {
+      calculatedBatch = `${55 + (year - 20) * 3 + (sem - 1)}`;
+    }
+    return { studentId: emailPrefix, batch: calculatedBatch };
+  }
+
+  // Look for any continuous digits sequence of length 8 to 12 in the prefix
+  const match = emailPrefix.match(/\d{9,12}/);
+  if (match) {
+    const digits = match[0];
+    const part1 = digits.slice(0, 3);
+    const part2 = digits.slice(3, 5);
+    const part3 = digits.slice(5);
+    const studentId = `${part1}-${part2}-${part3}`;
+    
+    const year = parseInt(part1.slice(0, 2), 10);
+    const sem = parseInt(part1.slice(2, 3), 10);
+    let calculatedBatch = '55th';
+    if (!isNaN(year) && !isNaN(sem) && sem >= 1 && sem <= 3) {
+      calculatedBatch = `${55 + (year - 20) * 3 + (sem - 1)}`;
+    }
+    return { studentId, batch: calculatedBatch };
+  }
+
+  // Fallback for cases like test emails or admins
+  return { studentId: '201-15-5678', batch: '55th' };
+}
+
 // ── Internal: ensure Firestore user doc ───────────────────
 async function ensureUserProfile(user: User, displayName?: string): Promise<void> {
   const existing = await getUserProfile(user.uid);
   const isSuperAdminEmail = user.email?.toLowerCase() === 'ratul23105101298@diu.edu.bd';
   if (!existing) {
     const emailPrefix = user.email ? user.email.split('@')[0] : '';
-    // DIU Student ID format: 201-15-5678 or similar digits-digits-digits
-    const isStudentId = /^\d{2,3}-\d{2,3}-\d{4,6}$/.test(emailPrefix);
+    const { studentId, batch } = parseStudentIdAndBatch(emailPrefix);
     await createUserProfile({
       uid: user.uid,
       name: displayName || user.displayName || 'Demo Student',
       email: user.email || '',
-      studentId: isStudentId ? emailPrefix : '201-15-5678',
+      studentId,
       department: 'CSE',
-      batch: '55th',
+      batch,
       role: isSuperAdminEmail ? 'superAdmin' : 'student',
       favoriteTeam: '',
       emailVerified: user.emailVerified,

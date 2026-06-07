@@ -110,10 +110,32 @@ export default function ParticipatePage() {
 
         // Prefill form if profile data exists
         if (profile) {
+          let initialId = profile.studentId || '';
+          let initialBatch = profile.batch || '';
+          
+          const emailPrefix = profile.email ? profile.email.split('@')[0] : '';
+          const digitsMatch = emailPrefix.match(/\d{9,12}/);
+          
+          if ((initialId === '201-15-5678' || !initialId) && digitsMatch) {
+            const digits = digitsMatch[0];
+            const part1 = digits.slice(0, 3);
+            const part2 = digits.slice(3, 5);
+            const part3 = digits.slice(5);
+            initialId = `${part1}-${part2}-${part3}`;
+            
+            if (initialBatch === '55th' || initialBatch === '55' || !initialBatch) {
+              const year = parseInt(part1.slice(0, 2), 10);
+              const sem = parseInt(part1.slice(2, 3), 10);
+              if (!isNaN(year) && !isNaN(sem) && sem >= 1 && sem <= 3) {
+                initialBatch = `${55 + (year - 20) * 3 + (sem - 1)}`;
+              }
+            }
+          }
+
           setName(profile.name || '');
-          setStudentId(profile.studentId || '');
+          setStudentId(initialId);
           setDepartment(profile.department || '');
-          setBatch(profile.batch || '');
+          setBatch(initialBatch);
         }
       } catch (err) {
         console.error('Error loading core registration data:', err);

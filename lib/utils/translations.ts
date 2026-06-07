@@ -4,6 +4,7 @@ export const translations = {
   en: {
     // Navigation & Common
     appName: "DIU FIFA Community",
+    navHome: "Home",
     navDashboard: "Dashboard",
     navVote: "Vote",
     navStandings: "Standings",
@@ -184,6 +185,7 @@ export const translations = {
   bn: {
     // Navigation & Common
     appName: "ডিআইইউ ফিফা কমিউনিটি",
+    navHome: "হোম",
     navDashboard: "ড্যাশবোর্ড",
     navVote: "ভোটদান",
     navStandings: "ফলাফল",
