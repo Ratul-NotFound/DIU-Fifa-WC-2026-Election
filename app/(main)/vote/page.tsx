@@ -163,7 +163,19 @@ function VoteBoothContent() {
       await refreshProfile();
       setTimeout(() => setSuccessMsg(''), 3000);
     } else {
-      setError(res.error || (lang === 'en' ? 'Vote failed. Please try again.' : 'ভোট ব্যর্থ হয়েছে। আবার চেষ্টা করুন।'));
+      let errMsg = res.error || '';
+      if (errMsg === 'ALREADY_VOTED' || errMsg.includes('already voted')) {
+        errMsg = lang === 'en' ? 'You have already voted for this position.' : 'আপনি ইতিমধ্যে এই পদের জন্য ভোট দিয়েছেন।';
+      } else if (errMsg === 'ELECTION_NOT_ACTIVE') {
+        errMsg = lang === 'en' ? 'The election is not active for voting.' : 'ভোটগ্রহণের জন্য নির্বাচনটি সক্রিয় নয়।';
+      } else if (errMsg === 'VOTING_NOT_STARTED') {
+        errMsg = lang === 'en' ? 'Voting has not started yet.' : 'ভোটগ্রহণ এখনও শুরু হয়নি।';
+      } else if (errMsg === 'VOTING_ENDED') {
+        errMsg = lang === 'en' ? 'Voting has already concluded.' : 'ভোটগ্রহণ ইতিমধ্যেই শেষ হয়েছে।';
+      } else {
+        errMsg = res.error || (lang === 'en' ? 'Vote failed. Please try again.' : 'ভোট ব্যর্থ হয়েছে। আবার চেষ্টা করুন।');
+      }
+      setError(errMsg);
     }
     setPendingVote(null);
   };
@@ -185,7 +197,7 @@ function VoteBoothContent() {
     if (lang === 'bn') {
       const map: Record<string, string> = {
         'President': 'সভাপতি',
-        'Vice President': 'सह-সভাপতি',
+        'Vice President': 'সহ-সভাপতি',
         'General Secretary': 'সাধারণ সম্পাদক',
         'Organizing Secretary': 'সাংগঠনিক সম্পাদক',
         'Joint Secretary': 'যুগ্ম সাধারণ সম্পাদক',
@@ -202,7 +214,10 @@ function VoteBoothContent() {
     return <div className="loading-center"><div className="spinner" /></div>;
   }
 
-  const isLive = settings?.status === 'live';
+  const now = Date.now();
+  const votingStarted = settings?.votingStart ? now >= settings.votingStart : true;
+  const votingEnded = settings?.votingEnd ? now > settings.votingEnd : false;
+  const isLive = settings?.status === 'live' && votingStarted && !votingEnded;
 
   return (
     <div className="page-content" style={{ paddingBottom: '100px', maxWidth: '800px' }}>
@@ -214,6 +229,16 @@ function VoteBoothContent() {
           {settings.status === 'draft' && (lang === 'en' ? ' The election has not started yet. Previewing positions and candidates.' : ' নির্বাচন এখনও শুরু হয়নি। পদের তালিকা ও প্রার্থী প্রোফাইল প্রদর্শিত হচ্ছে।')}
           {settings.status === 'counting' && (lang === 'en' ? ' Votes are currently being counted.' : ' বর্তমানে ভোট গণনা করা হচ্ছে।')}
           {settings.status === 'finished' && (lang === 'en' ? ' The election has ended. View final results on the standings page.' : ' নির্বাচন শেষ হয়েছে। ফলাফল পাতায় চূড়ান্ত স্ট্যান্ডিংস দেখুন।')}
+          {settings.status === 'live' && !votingStarted && (
+            lang === 'en' 
+              ? ` The voting window has not opened yet. It is scheduled to start at ${new Date(settings.votingStart!).toLocaleString()}.` 
+              : ` ভোট গ্রহণের সময় এখনও শুরু হয়নি। এটি শুরু হওয়ার সময় নির্ধারণ করা হয়েছে: ${new Date(settings.votingStart!).toLocaleString()}।`
+          )}
+          {settings.status === 'live' && votingEnded && (
+            lang === 'en' 
+              ? ` The voting window has closed. It ended at ${new Date(settings.votingEnd!).toLocaleString()}.` 
+              : ` ভোট গ্রহণের সময় শেষ হয়ে গেছে। এটি শেষ হয়েছে: ${new Date(settings.votingEnd!).toLocaleString()}।`
+          )}
         </div>
       )}
 

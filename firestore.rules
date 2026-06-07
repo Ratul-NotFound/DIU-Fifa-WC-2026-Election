@@ -79,7 +79,18 @@ service cloud.firestore {
     match /votes/{voteId} {
       // Votes are write-only via transaction (no direct client reads of others' votes)
       allow create: if isSignedIn() && isDIUEmail()
-                    && request.resource.data.voterUid == request.auth.uid;
+                    && request.resource.data.voterUid == request.auth.uid
+                    && get(/databases/$(database)/documents/electionSettings/main).data.status == 'live'
+                    && (
+                      !('votingStart' in get(/databases/$(database)/documents/electionSettings/main).data) ||
+                      get(/databases/$(database)/documents/electionSettings/main).data.votingStart == null ||
+                      request.time.toMillis() >= get(/databases/$(database)/documents/electionSettings/main).data.votingStart
+                    )
+                    && (
+                      !('votingEnd' in get(/databases/$(database)/documents/electionSettings/main).data) ||
+                      get(/databases/$(database)/documents/electionSettings/main).data.votingEnd == null ||
+                      request.time.toMillis() <= get(/databases/$(database)/documents/electionSettings/main).data.votingEnd
+                    );
       // Users can read their own votes; only admin can read all
       allow read: if isAdmin() || (isSignedIn() && resource.data.voterUid == request.auth.uid);
       // No updates or deletes on votes

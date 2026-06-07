@@ -23,6 +23,7 @@ export default async function LandingPage() {
   let standings: any[] = [];
   let jerseys: any[] = [];
   let showJerseys = false;
+  let isVotingLive = false;
 
   try {
     const [settings, fetchedTeams, fetchedStandings, fetchedJerseys] = await Promise.all([
@@ -34,6 +35,10 @@ export default async function LandingPage() {
     if (settings) {
       electionStatus = settings.status;
       showJerseys = settings.showJerseys ?? false;
+      const now = Date.now();
+      const votingStarted = settings.votingStart ? now >= settings.votingStart : true;
+      const votingEnded = settings.votingEnd ? now > settings.votingEnd : false;
+      isVotingLive = settings.status === 'live' && votingStarted && !votingEnded;
     }
     dbTeams = fetchedTeams;
     standings = fetchedStandings;
@@ -53,7 +58,7 @@ export default async function LandingPage() {
             
             {/* Left Column: Info & CTAs */}
             <div className="hero-content">
-              {electionStatus === 'live' && (
+              {isVotingLive && (
                 <div className="live-dot" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', padding: '6px 14px', borderRadius: '99px' }}>
                   <span className="live-dot-pulse" style={{ display: 'inline-block', width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', marginRight: '8px', animation: 'pulse 1.5s infinite' }} />
                   {t.heroLiveDot}

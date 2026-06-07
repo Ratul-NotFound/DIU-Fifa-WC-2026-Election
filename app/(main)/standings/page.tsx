@@ -119,7 +119,7 @@ export default function StandingsPage() {
     if (lang === 'bn') {
       const map: Record<string, string> = {
         'President': 'সভাপতি',
-        'Vice President': 'सह-সভাপতি',
+        'Vice President': 'সহ-সভাপতি',
         'General Secretary': 'সাধারণ সম্পাদক',
         'Organizing Secretary': 'সাংগঠনিক সম্পাদক',
         'Joint Secretary': 'যুগ্ম সাধারণ সম্পাদক',

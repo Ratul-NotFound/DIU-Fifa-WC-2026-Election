@@ -33,7 +33,10 @@ export default function DashboardPage() {
   }, [lang]);
 
   const votedCount = profile?.votedPositions?.length ?? 0;
-  const isLive = settings?.status === 'live';
+  const now = Date.now();
+  const votingStarted = settings?.votingStart ? now >= settings.votingStart : true;
+  const votingEnded = settings?.votingEnd ? now > settings.votingEnd : false;
+  const isLive = settings?.status === 'live' && votingStarted && !votingEnded;
 
   const getLocalizedStatusLabel = (status: string) => {
     if (lang === 'bn') {

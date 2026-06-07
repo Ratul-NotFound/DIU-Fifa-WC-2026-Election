@@ -620,6 +620,21 @@ export async function castVote(
 
   if (!dbReady()) {
     const mock = getMockDB();
+    const settings = mock.settings;
+    const now = Date.now();
+
+    if (settings) {
+      if (settings.status !== 'live') {
+        return { success: false, error: 'ELECTION_NOT_ACTIVE' };
+      }
+      if (settings.votingStart && now < settings.votingStart) {
+        return { success: false, error: 'VOTING_NOT_STARTED' };
+      }
+      if (settings.votingEnd && now > settings.votingEnd) {
+        return { success: false, error: 'VOTING_ENDED' };
+      }
+    }
+
     const user = mock.users[voterUid];
     if (user && user.votedPositions?.includes(voteKeyVal)) {
       return { success: false, error: 'You have already voted for this position.' };
@@ -658,6 +673,23 @@ export async function castVote(
 
   try {
     await runTransaction(db, async (transaction) => {
+      // 0. Read election settings to verify eligibility
+      const settingsRef = doc(db, 'electionSettings', 'main');
+      const settingsSnap = await transaction.get(settingsRef);
+      if (settingsSnap.exists()) {
+        const settings = settingsSnap.data() as ElectionSettings;
+        const now = Date.now();
+        if (settings.status !== 'live') {
+          throw new Error('ELECTION_NOT_ACTIVE');
+        }
+        if (settings.votingStart && now < settings.votingStart) {
+          throw new Error('VOTING_NOT_STARTED');
+        }
+        if (settings.votingEnd && now > settings.votingEnd) {
+          throw new Error('VOTING_ENDED');
+        }
+      }
+
       // 1. Read voter's current state
       const userRef = doc(db, 'users', voterUid);
       const userSnap = await transaction.get(userRef);
