@@ -138,19 +138,6 @@ export default async function LandingPage() {
                     key={jersey.id}
                     className="jersey-card"
                     style={{
-                      flex: '0 0 220px',
-                      scrollSnapAlign: 'start',
-                      background: 'rgba(12, 19, 36, 0.45)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 'var(--radius-lg)',
-                      overflow: 'hidden',
-                      position: 'relative',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      transition: 'all 0.3s ease',
-                      boxShadow: 'var(--shadow)',
                       '--card-glow-color': teamAccent + '15',
                     } as React.CSSProperties}
                   >
@@ -167,13 +154,7 @@ export default async function LandingPage() {
                     }} />
 
                     {/* Image Wrapper */}
-                    <div style={{
-                      position: 'relative',
-                      width: '100%',
-                      height: '160px',
-                      overflow: 'hidden',
-                      zIndex: 2,
-                    }}>
+                    <div className="jersey-image-wrapper">
                       <img
                         src={jersey.pictureUrl}
                         alt={`${jersey.teamName} Jersey`}
@@ -202,38 +183,14 @@ export default async function LandingPage() {
                     </div>
 
                     {/* Card Body */}
-                    <div style={{
-                      padding: 'var(--space-3)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      flexGrow: 1,
-                      zIndex: 2,
-                      position: 'relative',
-                    }}>
+                    <div className="jersey-card-body">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-2)', gap: '4px' }}>
-                        <h3 className="jersey-team-title" style={{
-                          fontFamily: 'var(--font-display)',
-                          fontSize: 'var(--text-base)',
-                          fontWeight: 700,
-                          color: 'var(--text-primary)',
-                          margin: 0,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          flex: 1,
-                        }} title={jersey.teamName}>
+                        <h3 className="jersey-card-title" title={jersey.teamName}>
                           {jersey.teamName}
                         </h3>
-                        <span className="jersey-price-badge" style={{
-                          fontFamily: 'var(--font-display)',
-                          fontSize: 'var(--text-xs)',
-                          fontWeight: 800,
-                          color: '#ffffff',
+                        <span className="jersey-card-price" style={{
                           background: teamAccent + '15',
                           border: `1.5px solid ${teamAccent}30`,
-                          padding: '2px 6px',
-                          borderRadius: 'var(--radius-sm)',
-                          whiteSpace: 'nowrap',
                         }}>
                           {t.jerseyPrice.replace('{price}', jersey.price.toString())}
                         </span>
