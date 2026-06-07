@@ -723,6 +723,10 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   border-radius: var(--radius);
   transition: background var(--transition);
   cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  outline: none;
 }
 
 @media (min-width: 1024px) {
@@ -741,6 +745,40 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   background: var(--text-secondary);
   border-radius: 1px;
   transition: transform var(--transition), opacity var(--transition);
+}
+
+.navbar-brand-text {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .navbar-brand-text {
+    display: inline;
+  }
+}
+
+.drawer .navbar-brand-text {
+  display: inline !important;
+}
+
+.drawer-close-btn {
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background var(--transition), color var(--transition);
+}
+
+.drawer-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
 }
 
 /* ── Mobile Drawer ── */

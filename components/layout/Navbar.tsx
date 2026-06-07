@@ -51,7 +51,7 @@ export default function Navbar() {
             <span className="navbar-brand-icon">
               <FootballLogo />
             </span>
-            <span>{t.appName}</span>
+            <span className="navbar-brand-text">{t.appName}</span>
           </Link>
 
           {/* Desktop links */}
@@ -155,36 +155,15 @@ export default function Navbar() {
             <span className="navbar-brand-icon">
               <FootballLogo />
             </span>
-            {t.appName}
+            <span className="navbar-brand-text">{t.appName}</span>
           </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            {/* Mobile Language Toggle */}
-            <button
-              onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: 'var(--text-primary)',
-                fontSize: '10px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '2px'
-              }}
-            >
-              🌐 {lang === 'en' ? 'বাংলা' : 'English'}
-            </button>
-            <button
-              onClick={() => setDrawerOpen(false)}
-              style={{ color: 'var(--text-muted)', background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', padding: 'var(--space-2)' }}
-              id="btn-close-drawer"
-            >
-              ✕
-            </button>
-          </div>
+          <button
+            onClick={() => setDrawerOpen(false)}
+            className="drawer-close-btn"
+            id="btn-close-drawer"
+          >
+            ✕
+          </button>
         </div>
 
         {profile ? (
@@ -244,15 +223,37 @@ export default function Navbar() {
                   ⚙ {t.navAdmin}
                 </Link>
               )}
+              <button
+                onClick={() => {
+                  setLang(lang === 'en' ? 'bn' : 'en');
+                  setDrawerOpen(false);
+                }}
+                className="drawer-link"
+                style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}
+              >
+                🌐 {lang === 'en' ? 'বাংলা সংস্করণ (BN)' : 'English Version (EN)'}
+              </button>
             </>
           ) : (
-            <Link
-              href="/standings"
-              className={`drawer-link${pathname.startsWith('/standings') ? ' active' : ''}`}
-              onClick={() => setDrawerOpen(false)}
-            >
-              📊 {t.navStandings}
-            </Link>
+            <>
+              <Link
+                href="/standings"
+                className={`drawer-link${pathname.startsWith('/standings') ? ' active' : ''}`}
+                onClick={() => setDrawerOpen(false)}
+              >
+                📊 {t.navStandings}
+              </Link>
+              <button
+                onClick={() => {
+                  setLang(lang === 'en' ? 'bn' : 'en');
+                  setDrawerOpen(false);
+                }}
+                className="drawer-link"
+                style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}
+              >
+                🌐 {lang === 'en' ? 'বাংলা সংস্করণ (BN)' : 'English Version (EN)'}
+              </button>
+            </>
           )}
         </nav>
 
