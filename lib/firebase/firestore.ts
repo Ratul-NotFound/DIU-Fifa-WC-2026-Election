@@ -303,8 +303,13 @@ export async function getPositions(): Promise<Position[]> {
   }
 
   positionsSeedingPromise = (async () => {
-    const snap = await getDocs(query(collection(db, 'positions'), orderBy('order')));
-    const list = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Position));
+    let list: Position[] = [];
+    try {
+      const snap = await getDocs(query(collection(db, 'positions'), orderBy('order')));
+      list = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Position));
+    } catch (err) {
+      console.error("Failed to fetch positions from Firestore:", err);
+    }
 
     const defaultPositions = [
       { title: 'President', description: 'Leads the team committee.', maxWinners: 1, order: 1 },
@@ -321,9 +326,14 @@ export async function getPositions(): Promise<Position[]> {
     for (const pos of defaultPositions) {
       const exists = list.some(p => p.title.toLowerCase() === pos.title.toLowerCase());
       if (!exists) {
-        const id = await createPosition(pos);
-        list.push({ id, ...pos });
-        newlyAdded = true;
+        try {
+          const id = await createPosition(pos);
+          list.push({ id, ...pos });
+          newlyAdded = true;
+        } catch (writeErr) {
+          console.warn("Could not seed position in Firestore (likely permission rules):", writeErr);
+          list.push({ id: pos.title.toLowerCase().replace(/[^a-z0-9]/g, '_'), ...pos });
+        }
       }
     }
 
