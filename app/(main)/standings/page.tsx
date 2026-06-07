@@ -5,10 +5,12 @@ import { getTeams, getPositions, getApprovedCandidates, getElectionSettings, get
 import type { Team, Position, Candidate, ElectionSettings, ResultsDoc, CandidateWithScore } from '@/lib/types';
 import { calcPercentage, statusLabel, getTeamFlagUrl, getTeamAccentColor } from '@/lib/utils/helpers';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/context/LanguageContext';
 
 const POLL_INTERVAL = 5000; // 5 seconds
 
 export default function StandingsPage() {
+  const { lang, t } = useLanguage();
   const [teams, setTeams] = useState<Team[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -100,6 +102,36 @@ export default function StandingsPage() {
     return ranked;
   };
 
+  const getLocalizedStatusLabel = (status: string) => {
+    if (lang === 'bn') {
+      const map: Record<string, string> = {
+        draft: 'ড্রাফট (অকার্যকর)',
+        live: 'লাইভ — ভোটদান চলছে',
+        counting: 'ভোট গণনা করা হচ্ছে',
+        finished: 'ফলাফল প্রকাশিত হয়েছে',
+      };
+      return map[status] ?? status;
+    }
+    return statusLabel(status);
+  };
+
+  const getLocalizedPositionTitle = (title: string) => {
+    if (lang === 'bn') {
+      const map: Record<string, string> = {
+        'President': 'সভাপতি',
+        'Vice President': 'सह-সভাপতি',
+        'General Secretary': 'সাধারণ সম্পাদক',
+        'Organizing Secretary': 'সাংগঠনিক সম্পাদক',
+        'Joint Secretary': 'যুগ্ম সাধারণ সম্পাদক',
+        'Press Secretary': 'প্রেস সেক্রেটারি',
+        'Publicity Secretary': 'প্রচার ও প্রকাশনা সম্পাদক',
+        'Executive Member': 'কার্যনির্বাহী সদস্য',
+      };
+      return map[title] ?? title;
+    }
+    return title;
+  };
+
   if (loading) {
     return <div className="loading-center"><div className="spinner" /></div>;
   }
@@ -112,24 +144,24 @@ export default function StandingsPage() {
       {/* Header */}
       <div className="section-header">
         <div>
-          <h1>Election Standings</h1>
+          <h1>{t.standHeading}</h1>
           <p className="section-sub">
-            {settings ? statusLabel(settings.status) : '—'}
+            {settings ? getLocalizedStatusLabel(settings.status) : '—'}
             {lastUpdated && (
               <span style={{ marginLeft: 'var(--space-3)', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                · Updated {lastUpdated.toLocaleTimeString()}
+                · {lang === 'en' ? 'Updated' : 'আপডেট করা হয়েছে'} {lastUpdated.toLocaleTimeString()}
               </span>
             )}
           </p>
         </div>
         {(settings?.status === 'live' || settings?.status === 'counting') && (
-          <span className="live-dot">Auto-refreshing</span>
+          <span className="live-dot">{lang === 'en' ? 'Auto-refreshing' : 'স্বয়ংক্রিয় রিফ্রেশ হচ্ছে'}</span>
         )}
       </div>
 
       {settings?.status === 'draft' && (
         <div className="alert alert-info" style={{ marginBottom: 'var(--space-6)' }}>
-          Standings will be visible once voting begins.
+          {lang === 'en' ? 'Standings will be visible once voting begins.' : 'ভোট শুরু হলে নির্বাচনী ফলাফল দৃশ্যমান হবে।'}
         </div>
       )}
 
@@ -171,9 +203,9 @@ export default function StandingsPage() {
               onClick={() => setSelectedPos(pos.id)}
               id={`results-pos-${pos.id}`}
             >
-              <span className="position-tab-title">{pos.title}</span>
+              <span className="position-tab-title">{getLocalizedPositionTitle(pos.title)}</span>
               <span className="position-tab-status">
-                {results.find(r => r.positionId === pos.id)?.totalVotes ?? 0} votes
+                {results.find(r => r.positionId === pos.id)?.totalVotes ?? 0} {lang === 'en' ? 'votes' : 'ভোট'}
               </span>
             </button>
           ))}
@@ -183,18 +215,20 @@ export default function StandingsPage() {
       {/* Results */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
         <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600 }}>
-          {positions.find(p => p.id === selectedPos)?.title ?? 'Standings'}
+          {getLocalizedPositionTitle(positions.find(p => p.id === selectedPos)?.title ?? 'Standings')}
         </h2>
         <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
-          {totalVotesForPos} total votes
+          {lang === 'en' ? `${totalVotesForPos} total votes` : `মোট ${totalVotesForPos} ভোট`}
         </span>
       </div>
 
       {currentRanked.length === 0 ? (
         <div className="empty-state">
           <span className="empty-icon">📊</span>
-          <p className="empty-title">No Standings Yet</p>
-          <p className="empty-desc">No votes have been cast for this position.</p>
+          <p className="empty-title">{lang === 'en' ? 'No Standings Yet' : 'এখনো কোনো ফলাফল নেই'}</p>
+          <p className="empty-desc">
+            {lang === 'en' ? 'No votes have been cast for this position.' : 'এই পদের জন্য কোনো ভোট প্রদান করা হয়নি।'}
+          </p>
         </div>
       ) : (
         <div className="results-list">
@@ -217,11 +251,11 @@ export default function StandingsPage() {
                       <p style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{cand.name}</p>
                       {cand.isWinner && (
                         <span className="badge badge-green" style={{ fontSize: '10px' }}>
-                          {cand.rank === 1 ? '🏆 Winner' : '✓ Elected'}
+                          {cand.rank === 1 ? (lang === 'en' ? '🏆 Winner' : '🏆 বিজয়ী') : (lang === 'en' ? '✓ Elected' : '✓ নির্বাচিত')}
                         </span>
                       )}
                       {cand.isCloseRace && !cand.isWinner && (
-                        <span className="badge badge-yellow" style={{ fontSize: '10px' }}>⚡ Close Race</span>
+                        <span className="badge badge-yellow" style={{ fontSize: '10px' }}>{lang === 'en' ? '⚡ Close Race' : '⚡ তীব্র প্রতিদ্বন্দ্বিতা'}</span>
                       )}
                     </div>
                     <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
@@ -249,7 +283,7 @@ export default function StandingsPage() {
 
       {settings?.status === 'live' && (
         <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center', marginTop: 'var(--space-6)' }}>
-          Standings auto-refresh every 5 seconds
+          {lang === 'en' ? 'Standings auto-refresh every 5 seconds' : 'ফলাফল প্রতি ৫ সেকেন্ড পর পর স্বয়ংক্রিয়ভাবে রিফ্রেশ হয়'}
         </p>
       )}
     </div>

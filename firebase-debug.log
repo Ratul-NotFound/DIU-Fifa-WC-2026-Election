@@ -1,0 +1,31 @@
+[debug] [2026-06-07T01:14:36.512Z] ----------------------------------------------------------------------
+[debug] [2026-06-07T01:14:36.602Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js use
+[debug] [2026-06-07T01:14:36.603Z] CLI Version:   15.1.0
+[debug] [2026-06-07T01:14:36.603Z] Platform:      win32
+[debug] [2026-06-07T01:14:36.604Z] Node Version:  v20.19.4
+[debug] [2026-06-07T01:14:36.604Z] Time:          Sun Jun 07 2026 07:14:36 GMT+0600 (Bangladesh Standard Time)
+[debug] [2026-06-07T01:14:36.605Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-06-07T01:14:36.608Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-06-07T01:14:37.039Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-06-07T01:14:37.214Z] Error: Could not load the default credentials. Browse to https://cloud.google.com/docs/authentication/getting-started for more information.
+    at GoogleAuth.getApplicationDefaultAsync (C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\google-auth-library\build\src\auth\googleauth.js:287:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async GoogleAuth._GoogleAuth_determineClient (C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\google-auth-library\build\src\auth\googleauth.js:834:32)
+    at async GoogleAuth.getClient (C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\google-auth-library\build\src\auth\googleauth.js:698:20)
+    at async GoogleAuth.getAccessToken (C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\google-auth-library\build\src\auth\googleauth.js:722:24)
+    at async autoAuth (C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\lib\requireAuth.js:28:19)
+    at async Object.requireAuth [as fn] (C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\lib\requireAuth.js:91:20)
+    at async C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\lib\command.js:263:17
+[error] 
+[error] Error: Failed to authenticate, have you run firebase login?
+[debug] [2026-06-07T01:14:37.479Z] Error: EBUSY: resource busy or locked, unlink 'D:\Projects\DIU FIFA ELECTION\firebase-debug.log'
+    at Object.unlinkSync (node:fs:1886:11)
+    at process.<anonymous> (C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\cli.js:44:16)
+    at process.emit (node:events:524:28)
+    at process.exit (node:internal/process/per_thread:184:15)
+    at Timeout._onTimeout (C:\Users\USER\AppData\Roaming\npm\node_modules\firebase-tools\lib\errorOut.js:20:17)
+    at listOnTimeout (node:internal/timers:581:17)
+    at process.processTimers (node:internal/timers:519:7)
+[error] 
+[error] Error: An unexpected error has occurred.

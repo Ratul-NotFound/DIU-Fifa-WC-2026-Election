@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { logout } from '@/lib/firebase/auth';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/lib/context/LanguageContext';
 import FootballLogo from './FootballLogo';
 
 const navLinks = [
@@ -16,6 +17,7 @@ const navLinks = [
 
 export default function Navbar() {
   const { profile, user } = useAuth();
+  const { lang, setLang, t } = useLanguage();
   const pathname = usePathname();
   const router = useRouter();
   const [isAtTop, setIsAtTop] = React.useState(true);
@@ -49,7 +51,7 @@ export default function Navbar() {
             <span className="navbar-brand-icon">
               <FootballLogo />
             </span>
-            <span>DIU FIFA Community</span>
+            <span>{t.appName}</span>
           </Link>
 
           {/* Desktop links */}
@@ -60,26 +62,26 @@ export default function Navbar() {
                   href="/dashboard"
                   className={`navbar-link${pathname.startsWith('/dashboard') ? ' active' : ''}`}
                 >
-                  Dashboard
+                  {t.navDashboard}
                 </Link>
                 <Link
                   href="/vote"
                   className={`navbar-link${pathname.startsWith('/vote') ? ' active' : ''}`}
                 >
-                  Vote
+                  {t.navVote}
                 </Link>
                 <Link
                   href="/standings"
                   className={`navbar-link${pathname.startsWith('/standings') ? ' active' : ''}`}
                 >
-                  Standings
+                  {t.navStandings}
                 </Link>
                 {isAdmin && (
                   <Link
                     href="/admin"
                     className={`navbar-link${pathname.startsWith('/admin') ? ' active' : ''}`}
                   >
-                    Admin
+                    {t.navAdmin}
                   </Link>
                 )}
               </>
@@ -88,12 +90,33 @@ export default function Navbar() {
                 href="/standings"
                 className={`navbar-link${pathname.startsWith('/standings') ? ' active' : ''}`}
               >
-                Standings
+                {t.navStandings}
               </Link>
             )}
           </div>
 
-          <div className="navbar-actions">
+          <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            {/* Language Selector */}
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                color: 'var(--text-primary)',
+                cursor: 'pointer'
+              }}
+              title={lang === 'en' ? 'বাংলা সংস্করণ' : 'English version'}
+            >
+              🌐 {lang === 'en' ? 'বাংলা' : 'English'}
+            </button>
+
             {user ? (
               <Link href="/profile" className="avatar" title={profile?.name || user.email || ''} style={{ textDecoration: 'none' }}>
                 {user.photoURL ? (
@@ -104,7 +127,7 @@ export default function Navbar() {
               </Link>
             ) : (
               <Link href="/login" className="btn btn-primary btn-sm">
-                Sign In
+                {t.navSignIn}
               </Link>
             )}
             <button
@@ -127,20 +150,41 @@ export default function Navbar() {
         onClick={() => setDrawerOpen(false)}
       />
       <div className={`drawer${drawerOpen ? ' open' : ''}`}>
-        <div className="drawer-header">
+        <div className="drawer-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span className="navbar-brand" style={{ fontSize: 'var(--text-sm)' }}>
             <span className="navbar-brand-icon">
               <FootballLogo />
             </span>
-            DIU FIFA Community
+            {t.appName}
           </span>
-          <button
-            onClick={() => setDrawerOpen(false)}
-            style={{ color: 'var(--text-muted)', background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', padding: 'var(--space-2)' }}
-            id="btn-close-drawer"
-          >
-            ✕
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            {/* Mobile Language Toggle */}
+            <button
+              onClick={() => setLang(lang === 'en' ? 'bn' : 'en')}
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: 'var(--text-primary)',
+                fontSize: '10px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '2px'
+              }}
+            >
+              🌐 {lang === 'en' ? 'বাংলা' : 'English'}
+            </button>
+            <button
+              onClick={() => setDrawerOpen(false)}
+              style={{ color: 'var(--text-muted)', background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', padding: 'var(--space-2)' }}
+              id="btn-close-drawer"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {profile ? (
@@ -163,7 +207,7 @@ export default function Navbar() {
           </div>
         ) : (
           <div style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--border)' }}>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>DIU FIFA Community Portal</p>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{t.appName} {lang === 'en' ? 'Portal' : 'পোর্টাল'}</p>
           </div>
         )}
 
@@ -175,21 +219,21 @@ export default function Navbar() {
                 className={`drawer-link${pathname.startsWith('/dashboard') ? ' active' : ''}`}
                 onClick={() => setDrawerOpen(false)}
               >
-                📋 Dashboard
+                📋 {t.navDashboard}
               </Link>
               <Link
                 href="/vote"
                 className={`drawer-link${pathname.startsWith('/vote') ? ' active' : ''}`}
                 onClick={() => setDrawerOpen(false)}
               >
-                🗳️ Vote Booth
+                🗳️ {t.navVote}
               </Link>
               <Link
                 href="/standings"
                 className={`drawer-link${pathname.startsWith('/standings') ? ' active' : ''}`}
                 onClick={() => setDrawerOpen(false)}
               >
-                📊 Standings
+                📊 {t.navStandings}
               </Link>
               {isAdmin && (
                 <Link
@@ -197,7 +241,7 @@ export default function Navbar() {
                   className={`drawer-link${pathname.startsWith('/admin') ? ' active' : ''}`}
                   onClick={() => setDrawerOpen(false)}
                 >
-                  ⚙ Admin Panel
+                  ⚙ {t.navAdmin}
                 </Link>
               )}
             </>
@@ -207,7 +251,7 @@ export default function Navbar() {
               className={`drawer-link${pathname.startsWith('/standings') ? ' active' : ''}`}
               onClick={() => setDrawerOpen(false)}
             >
-              📊 Standings
+              📊 {t.navStandings}
             </Link>
           )}
         </nav>
@@ -215,11 +259,11 @@ export default function Navbar() {
         <div className="drawer-footer">
           {user ? (
             <button onClick={handleLogout} className="btn btn-ghost btn-full" id="btn-drawer-logout">
-              Sign Out
+              {t.navSignOut}
             </button>
           ) : (
             <Link href="/login" className="btn btn-primary btn-full" onClick={() => setDrawerOpen(false)}>
-              Sign In
+              {t.navSignIn}
             </Link>
           )}
         </div>

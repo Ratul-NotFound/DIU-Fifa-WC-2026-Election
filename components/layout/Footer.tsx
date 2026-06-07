@@ -2,8 +2,11 @@
 
 import Link from 'next/link';
 import FootballLogo from './FootballLogo';
+import { useLanguage } from '@/lib/context/LanguageContext';
 
 export default function Footer() {
+  const { lang, t } = useLanguage();
+
   return (
     <footer className="footer">
       <div className="container footer-inner">
@@ -14,28 +17,27 @@ export default function Footer() {
             <span className="footer-logo-icon">
               <FootballLogo />
             </span>
-            <span className="footer-logo-text">DIU FIFA Community</span>
+            <span className="footer-logo-text">{t.appName}</span>
           </div>
           <p className="footer-tagline">
-            Connecting football gamers and fans across Daffodil International University. Compete, connect, and represent.
+            {t.footerDesc}
           </p>
         </div>
 
         {/* Column 2: Platform Links */}
         <div className="footer-links-col">
-          <h4 className="footer-col-title">Platform</h4>
+          <h4 className="footer-col-title">{lang === 'en' ? 'Platform' : 'প্লাটফর্ম'}</h4>
           <ul className="footer-links-list">
-            <li><Link href="/">Home</Link></li>
-            <li><Link href="/dashboard">Dashboard</Link></li>
-            <li><Link href="/vote">Vote</Link></li>
-            <li><Link href="/standings">Live Standings</Link></li>
+            <li><Link href="/">{lang === 'en' ? 'Home' : 'হোম'}</Link></li>
+            <li><Link href="/dashboard">{t.navDashboard}</Link></li>
+            <li><Link href="/vote">{t.navVote}</Link></li>
+            <li><Link href="/standings">{t.navStandings}</Link></li>
           </ul>
         </div>
 
-
         {/* Column 4: Developer Profile */}
         <div className="footer-developer-col">
-          <h4 className="footer-col-title">Developed By</h4>
+          <h4 className="footer-col-title">{lang === 'en' ? 'Developed By' : 'ডেভেলপ করেছেন'}</h4>
           <div className="developer-card">
             <div className="developer-info">
               <div className="developer-avatar-wrapper">
@@ -49,7 +51,7 @@ export default function Footer() {
               </div>
               <div className="developer-details">
                 <h5 className="developer-name">Ratul</h5>
-                <p className="developer-role">Developer</p>
+                <p className="developer-role">{lang === 'en' ? 'Developer' : 'ডেভেলপার'}</p>
               </div>
             </div>
             <div className="developer-socials">

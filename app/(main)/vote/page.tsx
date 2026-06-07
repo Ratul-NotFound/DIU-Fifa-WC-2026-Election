@@ -13,6 +13,7 @@ import {
 } from '@/lib/firebase/firestore';
 import type { Team, Position, Candidate, ElectionSettings } from '@/lib/types';
 import { truncate, getTeamFlagUrl, getTeamAccentColor, statusLabel } from '@/lib/utils/helpers';
+import { useLanguage } from '@/lib/context/LanguageContext';
 
 function ChevronDownIcon({ className = '', style = {} }: { className?: string; style?: React.CSSProperties }) {
   return (
@@ -37,6 +38,7 @@ function VoteBoothContent() {
   const searchParams = useSearchParams();
   const initialTeamId = searchParams.get('team') || '';
   const { user, profile, refreshProfile } = useAuth();
+  const { lang, t } = useLanguage();
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
@@ -156,14 +158,44 @@ function VoteBoothContent() {
     setSubmitting(false);
 
     if (res.success) {
-      setSuccessMsg('✓ Vote cast successfully!');
+      setSuccessMsg(lang === 'en' ? '✓ Vote cast successfully!' : '✓ ভোট সফলভাবে দেওয়া হয়েছে!');
       setSelectedVotes(prev => ({ ...prev, [pendingVote.posId]: pendingVote.candId }));
       await refreshProfile();
       setTimeout(() => setSuccessMsg(''), 3000);
     } else {
-      setError(res.error || 'Vote failed. Please try again.');
+      setError(res.error || (lang === 'en' ? 'Vote failed. Please try again.' : 'ভোট ব্যর্থ হয়েছে। আবার চেষ্টা করুন।'));
     }
     setPendingVote(null);
+  };
+
+  const getLocalizedStatusLabel = (status: string) => {
+    if (lang === 'bn') {
+      const map: Record<string, string> = {
+        draft: 'ড্রাফট (অকার্যকর)',
+        live: 'লাইভ — ভোটদান চলছে',
+        counting: 'ভোট গণনা করা হচ্ছে',
+        finished: 'ফলাফল প্রকাশিত হয়েছে',
+      };
+      return map[status] ?? status;
+    }
+    return statusLabel(status);
+  };
+
+  const getLocalizedPositionTitle = (title: string) => {
+    if (lang === 'bn') {
+      const map: Record<string, string> = {
+        'President': 'সভাপতি',
+        'Vice President': 'सह-সভাপতি',
+        'General Secretary': 'সাধারণ সম্পাদক',
+        'Organizing Secretary': 'সাংগঠনিক সম্পাদক',
+        'Joint Secretary': 'যুগ্ম সাধারণ সম্পাদক',
+        'Press Secretary': 'প্রেস সেক্রেটারি',
+        'Publicity Secretary': 'প্রচার ও প্রকাশনা সম্পাদক',
+        'Executive Member': 'কার্যনির্বাহী সদস্য',
+      };
+      return map[title] ?? title;
+    }
+    return title;
   };
 
   if (loading && teams.length === 0) {
@@ -178,18 +210,18 @@ function VoteBoothContent() {
       {/* ── Election Status Banners ── */}
       {settings && !isLive && (
         <div className="alert alert-warning" style={{ marginBottom: 'var(--space-6)' }}>
-          🗳️ <strong>Voting is Closed:</strong>
-          {settings.status === 'draft' && ' The election has not started yet. Previewing positions and candidates.'}
-          {settings.status === 'counting' && ' Votes are currently being counted.'}
-          {settings.status === 'finished' && ' The election has ended. View final results on the standings page.'}
+          🗳️ <strong>{lang === 'en' ? 'Voting is Closed:' : 'ভোট গ্রহণ বন্ধ রয়েছে:'}</strong>
+          {settings.status === 'draft' && (lang === 'en' ? ' The election has not started yet. Previewing positions and candidates.' : ' নির্বাচন এখনও শুরু হয়নি। পদের তালিকা ও প্রার্থী প্রোফাইল প্রদর্শিত হচ্ছে।')}
+          {settings.status === 'counting' && (lang === 'en' ? ' Votes are currently being counted.' : ' বর্তমানে ভোট গণনা করা হচ্ছে।')}
+          {settings.status === 'finished' && (lang === 'en' ? ' The election has ended. View final results on the standings page.' : ' নির্বাচন শেষ হয়েছে। ফলাফল পাতায় চূড়ান্ত স্ট্যান্ডিংস দেখুন।')}
         </div>
       )}
 
       {/* ── Header ── */}
       <div className="section-header" style={{ marginBottom: 'var(--space-6)' }}>
         <div>
-          <h1>DIU Committee Ballots</h1>
-          <p className="section-sub">Select your team, review positions, and cast your vote</p>
+          <h1>{lang === 'en' ? 'DIU Committee Ballots' : 'ডিআইইউ কমিটি ব্যালট'}</h1>
+          <p className="section-sub">{lang === 'en' ? 'Select your team, review positions, and cast your vote' : 'আপনার দল নির্বাচন করুন, পদ পর্যালোচনা করুন এবং আপনার ভোট দিন'}</p>
         </div>
         {settings && (
           <span className={`badge ${
@@ -197,7 +229,7 @@ function VoteBoothContent() {
             settings.status === 'counting' ? 'badge-yellow' :
             settings.status === 'finished' ? 'badge-blue' : 'badge-muted'
           }`}>
-            {statusLabel(settings.status)}
+            {getLocalizedStatusLabel(settings.status)}
           </span>
         )}
       </div>
@@ -206,7 +238,7 @@ function VoteBoothContent() {
       {successMsg && <div className="alert alert-success" style={{ marginBottom: 'var(--space-4)' }}>{successMsg}</div>}
       {submitting && (
         <div className="alert alert-info" style={{ marginBottom: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <div className="spinner" style={{ width: 16, height: 16 }} /> Submitting vote…
+          <div className="spinner" style={{ width: 16, height: 16 }} /> {lang === 'en' ? 'Submitting vote…' : 'ভোট সাবমিট হচ্ছে…'}
         </div>
       )}
 
@@ -214,7 +246,7 @@ function VoteBoothContent() {
       <div className="card" style={{ marginBottom: 'var(--space-6)', background: 'rgba(12, 19, 36, 0.45)', position: 'relative', zIndex: 20 }}>
         <div className="form-group" style={{ margin: 0 }}>
           <label className="form-label" style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
-            Select Team
+            {lang === 'en' ? 'Select Team' : 'দল নির্বাচন করুন'}
           </label>
           
           <div className="custom-select-wrapper" style={{
@@ -247,7 +279,7 @@ function VoteBoothContent() {
                     <span style={{ fontWeight: 600 }}>{selectedTeam.name}</span>
                   </>
                 ) : (
-                  <span style={{ color: 'var(--text-muted)' }}>Select a team…</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{lang === 'en' ? 'Select a team…' : 'একটি দল নির্বাচন করুন…'}</span>
                 )}
               </div>
               <span className="custom-select-arrow">
@@ -261,7 +293,7 @@ function VoteBoothContent() {
                 <input
                   type="text"
                   className="custom-select-search-input"
-                  placeholder="Search team..."
+                  placeholder={lang === 'en' ? 'Search team...' : 'দল খুঁজুন...'}
                   value={teamSearchQuery}
                   onChange={(e) => setTeamSearchQuery(e.target.value)}
                   autoFocus={teamDropdownOpen}
@@ -272,14 +304,14 @@ function VoteBoothContent() {
                     onClick={() => setTeamSearchQuery('')}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 'var(--text-xs)', padding: '0 4px' }}
                   >
-                    Clear
+                    {lang === 'en' ? 'Clear' : 'মুছে ফেলুন'}
                   </button>
                 )}
               </div>
 
               <div className="custom-select-options">
                 {filteredTeams.length === 0 ? (
-                  <div className="custom-select-empty">No teams found</div>
+                  <div className="custom-select-empty">{lang === 'en' ? 'No teams found' : 'কোন দল পাওয়া যায়নি'}</div>
                 ) : (
                   filteredTeams.map(t => {
                     const isCurrent = t.id === selectedTeamId;
@@ -348,10 +380,10 @@ function VoteBoothContent() {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                   <span style={{ fontWeight: 600 }}>
-                    {positions.find(p => p.id === activePos)?.title || 'Select Position'}
+                    {getLocalizedPositionTitle(positions.find(p => p.id === activePos)?.title || (lang === 'en' ? 'Select Position' : 'পদ নির্বাচন করুন'))}
                   </span>
                   {hasVotedFor(activePos) && (
-                    <span className="badge badge-green" style={{ fontSize: '9px', padding: '2px 6px' }}>✓ Voted</span>
+                    <span className="badge badge-green" style={{ fontSize: '9px', padding: '2px 6px' }}>✓ {lang === 'en' ? 'Voted' : 'ভোট দিয়েছেন'}</span>
                   )}
                 </div>
                 <span className="custom-select-arrow">
@@ -374,9 +406,9 @@ function VoteBoothContent() {
                           setPosDropdownOpen(false);
                         }}
                       >
-                        <span style={{ fontWeight: isCurrent ? 600 : 500 }}>{pos.title}</span>
+                        <span style={{ fontWeight: isCurrent ? 600 : 500 }}>{getLocalizedPositionTitle(pos.title)}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                          {voted && <span className="badge badge-green" style={{ fontSize: '9px' }}>✓ Voted</span>}
+                          {voted && <span className="badge badge-green" style={{ fontSize: '9px' }}>✓ {lang === 'en' ? 'Voted' : 'ভোট দিয়েছেন'}</span>}
                           {isCurrent && <span style={{ color: accentColor }}>✓</span>}
                         </div>
                       </button>
@@ -403,9 +435,9 @@ function VoteBoothContent() {
                     color: isActive ? 'var(--text-primary)' : undefined,
                   }}
                 >
-                  <span className="position-tab-title">{pos.title}</span>
+                  <span className="position-tab-title">{getLocalizedPositionTitle(pos.title)}</span>
                   <span className="position-tab-status">
-                    {voted ? '✓ Voted' : 'Vote'}
+                    {voted ? (lang === 'en' ? '✓ Voted' : '✓ ভোট দিয়েছেন') : (lang === 'en' ? 'Vote' : 'ভোট দিন')}
                   </span>
                 </button>
               );
@@ -417,11 +449,13 @@ function VoteBoothContent() {
             <div style={{ marginBottom: 'var(--space-4)' }}>
               {hasVotedFor(activePos) ? (
                 <div className="alert alert-success" style={{ fontSize: 'var(--text-sm)', display: 'inline-flex', width: '100%' }}>
-                  ✓ You have already voted for {positions.find(p => p.id === activePos)?.title} for {selectedTeam?.name}. Your choice is locked.
+                  ✓ {lang === 'en' 
+                      ? `You have already voted for ${positions.find(p => p.id === activePos)?.title} for ${selectedTeam?.name}. Your choice is locked.` 
+                      : `আপনি ইতিমধ্যে ${selectedTeam?.name} দলের ${getLocalizedPositionTitle(positions.find(p => p.id === activePos)?.title || '')} পদে ভোট দিয়েছেন। আপনার পছন্দ লক করা আছে।`}
                 </div>
               ) : (
                 <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                  Cast one ballot for this position. Choices are final and cannot be modified.
+                  {lang === 'en' ? 'Cast one ballot for this position. Choices are final and cannot be modified.' : 'এই পদের জন্য একটি ভোট দিন। পছন্দ চূড়ান্ত এবং তা সংশোধন করা যাবে না।'}
                 </p>
               )}
             </div>
@@ -431,8 +465,12 @@ function VoteBoothContent() {
           {currentCandidates.length === 0 ? (
             <div className="empty-state" style={{ padding: '40px var(--space-4)' }}>
               <span className="empty-icon">👤</span>
-              <p className="empty-title">No Candidates Available</p>
-              <p className="empty-desc">There are no approved candidates running for this position in {selectedTeam?.name}.</p>
+              <p className="empty-title">{lang === 'en' ? 'No Candidates Available' : 'কোন প্রার্থী উপলব্ধ নেই'}</p>
+              <p className="empty-desc">
+                {lang === 'en' 
+                  ? `There are no approved candidates running for this position in ${selectedTeam?.name}.` 
+                  : `${selectedTeam?.name} দলে এই পদের জন্য কোনো অনুমোদিত প্রার্থী নেই।`}
+              </p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -489,7 +527,7 @@ function VoteBoothContent() {
                         </span>
                       </div>
                       {cand.studentId && (
-                        <p style={{ margin: '2px 0 6px 0', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Student ID: {cand.studentId}</p>
+                        <p style={{ margin: '2px 0 6px 0', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{lang === 'en' ? 'Student ID:' : 'স্টুডেন্ট আইডি:'} {cand.studentId}</p>
                       )}
                       {cand.manifesto && (
                         <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
@@ -502,16 +540,16 @@ function VoteBoothContent() {
                     <div style={{ flexShrink: 0, marginLeft: 'auto', width: '100%', maxWidth: '160px', marginTop: 'var(--space-2)' }}>
                       {!isLive ? (
                         <button disabled className="btn btn-ghost btn-full btn-sm" style={{ opacity: 0.5, fontSize: 'var(--text-xs)' }}>
-                          {settings?.status === 'draft' ? 'Voting Not Open' : 'Voting Closed'}
+                          {settings?.status === 'draft' ? (lang === 'en' ? 'Voting Not Open' : 'ভোট শুরু হয়নি') : (lang === 'en' ? 'Voting Closed' : 'ভোট গ্রহণ বন্ধ')}
                         </button>
                       ) : alreadyVoted ? (
                         isMyVote ? (
                           <div className="badge badge-green" style={{ display: 'flex', justifyContent: 'center', width: '100%', padding: '6px 0', fontSize: 'var(--text-xs)', background: `${accentColor}22`, border: `1px solid ${accentColor}` }}>
-                            ✓ Voted Choice
+                            ✓ {lang === 'en' ? 'Voted Choice' : '✓ নির্বাচিত পছন্দ'}
                           </div>
                         ) : (
                           <button disabled className="btn btn-ghost btn-full btn-sm" style={{ fontSize: 'var(--text-xs)' }}>
-                            Selection Locked
+                            {lang === 'en' ? 'Selection Locked' : 'পছন্দ লক করা আছে'}
                           </button>
                         )
                       ) : (
@@ -522,7 +560,7 @@ function VoteBoothContent() {
                           id={`btn-vote-${cand.id}`}
                           style={{ background: accentColor, borderColor: accentColor }}
                         >
-                          Vote
+                          {lang === 'en' ? 'Vote' : 'ভোট দিন'}
                         </button>
                       )}
                     </div>
@@ -538,27 +576,27 @@ function VoteBoothContent() {
       {showModal && pendingVote && (
         <div className="modal-backdrop" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2 className="modal-title">Confirm Your Vote</h2>
+            <h2 className="modal-title">{lang === 'en' ? 'Confirm Your Vote' : 'আপনার ভোট নিশ্চিত করুন'}</h2>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: 'var(--space-4)' }}>
-              You are about to lock your vote for:
+              {lang === 'en' ? 'You are about to lock your vote for:' : 'আপনি যার পক্ষে ভোট লক করতে যাচ্ছেন:'}
             </p>
             <div className="card" style={{ marginBottom: 'var(--space-4)', borderLeft: `4px solid ${accentColor}` }}>
               <p style={{ fontWeight: 700, fontSize: 'var(--text-base)', margin: 0 }}>
                 {candidates.find(c => c.id === pendingVote.candId)?.name}
               </p>
               <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                {positions.find(p => p.id === pendingVote.posId)?.title} · {selectedTeam?.name}
+                {getLocalizedPositionTitle(positions.find(p => p.id === pendingVote.posId)?.title || '')} · {selectedTeam?.name}
               </p>
             </div>
             <div className="alert alert-warning" style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)' }}>
-              ⚠ This ballot is permanent and cannot be modified or re-cast.
+              {lang === 'en' ? '⚠ This ballot is permanent and cannot be modified or re-cast.' : '⚠ এই ব্যালটটি স্থায়ী এবং তা সংশোধন বা পুনরায় ভোট দেওয়া যাবে না।'}
             </div>
             <div className="modal-actions">
               <button className="btn btn-ghost" onClick={() => setShowModal(false)} id="btn-cancel-vote">
-                Cancel
+                {lang === 'en' ? 'Cancel' : 'বাতিল'}
               </button>
               <button className="btn btn-green" onClick={confirmVote} id="btn-confirm-vote" style={{ background: accentColor, borderColor: accentColor }}>
-                Confirm Vote
+                {lang === 'en' ? 'Confirm Vote' : 'ভোট নিশ্চিত করুন'}
               </button>
             </div>
           </div>

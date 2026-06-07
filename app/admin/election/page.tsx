@@ -104,6 +104,28 @@ export default function ElectionControlPage() {
     setTimeout(() => setMsg(''), 2500);
   };
 
+  const toggleShowJerseys = async () => {
+    if (!profile || !settings) return;
+    const nextVal = settings.showJerseys === true ? false : true;
+    setSaving(true);
+    await updateElectionSettings({
+      showJerseys: nextVal
+    }, profile.uid);
+    await addAuditLog({
+      adminUid: profile.uid,
+      adminName: profile.name,
+      action: nextVal ? 'Enabled landing page jersey section' : 'Disabled landing page jersey section',
+      target: 'electionSettings',
+      details: '',
+      timestamp: Date.now(),
+    });
+    const updated = await getElectionSettings();
+    setSettings(updated);
+    setSaving(false);
+    setMsg(nextVal ? 'Jersey section visibility enabled.' : 'Jersey section visibility disabled.');
+    setTimeout(() => setMsg(''), 2500);
+  };
+
   const saveAnnouncement = async () => {
     if (!profile) return;
     setSaving(true);
@@ -194,6 +216,26 @@ export default function ElectionControlPage() {
             id="btn-apps-close"
           >
             Stop Applications
+          </button>
+        </div>
+      </div>
+
+      {/* Official Jersey Section Toggle */}
+      <div className="card" style={{ marginBottom: 'var(--space-6)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 className="card-title" style={{ margin: 0 }}>Official Jerseys Section Visibility</h3>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
+              Control whether the team jersey slider section is visible on the landing page.
+            </p>
+          </div>
+          <button
+            className={`btn btn-sm ${settings?.showJerseys === true ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={toggleShowJerseys}
+            disabled={saving}
+            id="btn-toggle-jerseys-visibility"
+          >
+            {settings?.showJerseys === true ? 'Visible' : 'Hidden'}
           </button>
         </div>
       </div>

@@ -11,6 +11,7 @@ const adminNav = [
   { href: '/admin/election', label: '🗳️ Election Control' },
   { href: '/admin/candidates', label: '👤 Candidates' },
   { href: '/admin/teams', label: '🌍 Teams' },
+  { href: '/admin/jerseys', label: '👕 Jerseys' },
   { href: '/admin/positions', label: '📋 Positions' },
   { href: '/admin/users', label: '👥 Users' },
   { href: '/admin/logs', label: '📜 Audit Logs' },

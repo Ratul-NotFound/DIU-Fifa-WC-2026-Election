@@ -77,8 +77,19 @@ export interface ElectionSettings {
   applicationsOpen: boolean;
   showStatusBanner: boolean;
   customBannerMessage: string;
+  showJerseys?: boolean;
   updatedAt: number;
   updatedBy: string;
+}
+
+export interface Jersey {
+  id: string;
+  teamName: string;
+  edition: 'Fan' | 'Player';
+  colorVariant: string;
+  price: number;
+  pictureUrl: string;
+  createdAt: number;
 }
 
 export interface AuditLog {

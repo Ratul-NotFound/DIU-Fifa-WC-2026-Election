@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getElectionSettings, getTeams, getLiveTeamStandings } from '@/lib/firebase/firestore';
+import { getElectionSettings, getTeams, getLiveTeamStandings, getJerseys } from '@/lib/firebase/firestore';
 import { getTeamFlagUrl, getTeamGradient, getTeamAccentColor } from '@/lib/utils/helpers';
 import FootballLogo from '@/components/layout/FootballLogo';
+import { getLanguageServer } from '@/lib/utils/language';
+import { getTranslations } from '@/lib/utils/translations';
 
 export const metadata: Metadata = {
   title: 'DIU FIFA Community Portal',
@@ -13,19 +15,29 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function LandingPage() {
+  const lang = await getLanguageServer();
+  const t = getTranslations(lang);
+
   let electionStatus = 'draft';
   let dbTeams: any[] = [];
   let standings: any[] = [];
+  let jerseys: any[] = [];
+  let showJerseys = false;
 
   try {
-    const [settings, fetchedTeams, fetchedStandings] = await Promise.all([
+    const [settings, fetchedTeams, fetchedStandings, fetchedJerseys] = await Promise.all([
       getElectionSettings(),
       getTeams(),
       getLiveTeamStandings(),
+      getJerseys(),
     ]);
-    if (settings) electionStatus = settings.status;
+    if (settings) {
+      electionStatus = settings.status;
+      showJerseys = settings.showJerseys ?? false;
+    }
     dbTeams = fetchedTeams;
     standings = fetchedStandings;
+    jerseys = fetchedJerseys;
   } catch (err) {
     console.error("Firestore read error:", err);
   }
@@ -44,24 +56,24 @@ export default async function LandingPage() {
               {electionStatus === 'live' && (
                 <div className="live-dot" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', padding: '6px 14px', borderRadius: '99px' }}>
                   <span className="live-dot-pulse" style={{ display: 'inline-block', width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', marginRight: '8px', animation: 'pulse 1.5s infinite' }} />
-                  Voting is Live Now
+                  {t.heroLiveDot}
                 </div>
               )}
               <div className="hero-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                 <span style={{ width: '22px', height: '22px', display: 'inline-block' }}>
                   <FootballLogo />
                 </span>
-                <span>DIU FIFA COMMUNITY PORTAL</span>
+                <span>{t.heroEyebrow}</span>
               </div>
               <h1 className="hero-title" style={{ maxWidth: '680px' }}>
-                DIU FIFA Committee Elections 2026
+                {t.heroTitle}
               </h1>
               <p className="hero-sub" style={{ maxWidth: '600px', marginBottom: 'var(--space-6)' }}>
-                Cast your vote for your national division committee representatives in real-time. Ensure you are signed in with your verified student account to enter the voting booth.
+                {t.heroSubtitle}
               </p>
               <div className="hero-actions" style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
                 <Link href="/vote" className="btn btn-primary btn-lg" style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)' }}>
-                  🗳️ Enter Voting Booth
+                  {t.heroActionVote}
                 </Link>
                 <Link href="/participate" className="btn btn-ghost btn-lg" style={{ 
                   border: '1.5px solid var(--fifa-purple)', 
@@ -69,7 +81,7 @@ export default async function LandingPage() {
                   background: 'rgba(139, 92, 246, 0.08)',
                   boxShadow: '0 0 15px rgba(139, 92, 246, 0.15)'
                 }}>
-                  📢 Apply for Candidate
+                  {t.heroActionApply}
                 </Link>
               </div>
             </div>
@@ -87,6 +99,186 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* ── Jerseys Section ── */}
+      {showJerseys && jerseys.length > 0 && (
+        <section id="official-jerseys" className="section-padding" style={{
+          background: 'linear-gradient(180deg, rgba(7, 11, 20, 0.5) 0%, rgba(12, 19, 36, 0.8) 100%)',
+          borderTop: '1px solid var(--border)',
+          borderBottom: '1px solid var(--border)',
+          paddingTop: 'var(--space-12)',
+          paddingBottom: 'var(--space-12)',
+        }}>
+          <div className="container">
+            <div className="section-header" style={{ marginBottom: 'var(--space-8)' }}>
+              <div>
+                <span className="badge badge-blue" style={{ marginBottom: 'var(--space-3)' }}>👕 Store</span>
+                <h2 className="section-title">{t.jerseySectionTitle}</h2>
+                <p className="section-sub" style={{ marginTop: 'var(--space-2)' }}>
+                  {t.jerseySectionSubtitle}
+                </p>
+              </div>
+            </div>
+
+            {/* Horizontal Scroll Container */}
+            <div className="jerseys-scroll-container" style={{
+              display: 'flex',
+              overflowX: 'auto',
+              gap: 'var(--space-6)',
+              paddingBottom: 'var(--space-6)',
+              paddingTop: 'var(--space-2)',
+              scrollSnapType: 'x mandatory',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'thin',
+            }}>
+              {jerseys.map((jersey) => {
+                const teamAccent = getTeamAccentColor(jersey.teamName);
+                const isPlayerEd = jersey.edition === 'Player';
+                return (
+                  <div
+                    key={jersey.id}
+                    className="jersey-card"
+                    style={{
+                      flex: '0 0 220px',
+                      scrollSnapAlign: 'start',
+                      background: 'rgba(12, 19, 36, 0.45)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-lg)',
+                      overflow: 'hidden',
+                      position: 'relative',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'all 0.3s ease',
+                      boxShadow: 'var(--shadow)',
+                      '--card-glow-color': teamAccent + '15',
+                    } as React.CSSProperties}
+                  >
+                    {/* Glowing effect inside card */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '140px',
+                      background: `radial-gradient(ellipse at top, ${teamAccent}20, transparent 65%)`,
+                      zIndex: 1,
+                      pointerEvents: 'none',
+                    }} />
+
+                    {/* Image Wrapper */}
+                    <div style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '160px',
+                      overflow: 'hidden',
+                      zIndex: 2,
+                    }}>
+                      <img
+                        src={jersey.pictureUrl}
+                        alt={`${jersey.teamName} Jersey`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          transition: 'transform 0.5s ease',
+                        }}
+                        className="jersey-img-hover"
+                      />
+                      {/* Edition Badge */}
+                      <span className={`badge ${isPlayerEd ? 'badge-blue' : 'badge-muted'}`} style={{
+                        position: 'absolute',
+                        top: 'var(--space-2)',
+                        right: 'var(--space-2)',
+                        fontSize: '9px',
+                        fontWeight: 700,
+                        zIndex: 3,
+                        boxShadow: 'var(--shadow-sm)',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
+                      }}>
+                        {isPlayerEd ? t.jerseyEditionPlayer : t.jerseyEditionFan}
+                      </span>
+                    </div>
+
+                    {/* Card Body */}
+                    <div style={{
+                      padding: 'var(--space-3)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      flexGrow: 1,
+                      zIndex: 2,
+                      position: 'relative',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-2)', gap: '4px' }}>
+                        <h3 className="jersey-team-title" style={{
+                          fontFamily: 'var(--font-display)',
+                          fontSize: 'var(--text-base)',
+                          fontWeight: 700,
+                          color: 'var(--text-primary)',
+                          margin: 0,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          flex: 1,
+                        }} title={jersey.teamName}>
+                          {jersey.teamName}
+                        </h3>
+                        <span className="jersey-price-badge" style={{
+                          fontFamily: 'var(--font-display)',
+                          fontSize: 'var(--text-xs)',
+                          fontWeight: 800,
+                          color: '#ffffff',
+                          background: teamAccent + '15',
+                          border: `1.5px solid ${teamAccent}30`,
+                          padding: '2px 6px',
+                          borderRadius: 'var(--radius-sm)',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {t.jerseyPrice.replace('{price}', jersey.price.toString())}
+                        </span>
+                      </div>
+
+                      <p style={{
+                        fontSize: '11px',
+                        color: 'var(--text-secondary)',
+                        marginBottom: 'var(--space-3)',
+                      }}>
+                        {t.jerseyColor.replace('{color}', jersey.colorVariant)}
+                      </p>
+
+                      <a
+                        href={`https://wa.me/8801784090278?text=Hello,%20I'm%20interested%20in%20ordering%20the%20${encodeURIComponent(jersey.teamName)}%20(${encodeURIComponent(jersey.edition)}%20Edition)%20jersey%20(${encodeURIComponent(jersey.colorVariant)}%20variant)%20priced%20at%20${jersey.price}%20BDT.`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-sm btn-full"
+                        style={{
+                          marginTop: 'auto',
+                          background: `linear-gradient(135deg, ${teamAccent} 0%, ${teamAccent}dd 100%)`,
+                          color: '#ffffff',
+                          fontWeight: 600,
+                          border: 'none',
+                          boxShadow: `0 4px 12px ${teamAccent}20`,
+                          transition: 'all 0.3s ease',
+                          textAlign: 'center',
+                          textDecoration: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '6px 12px',
+                        }}
+                      >
+                        {t.jerseyBuyNow}
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── 2026 Committee Election Hub ── */}
       <section id="election-hub" className="section-padding" style={{
         background: 'rgba(10, 15, 28, 0.25)',
@@ -97,10 +289,10 @@ export default async function LandingPage() {
           
           <div className="section-header" style={{ marginBottom: 'var(--space-10)' }}>
             <div>
-              <span className="badge badge-blue" style={{ marginBottom: 'var(--space-3)' }}>Module: Election Hub</span>
-              <h2 className="section-title">2026 Committee Election Center</h2>
+              <span className="badge badge-blue" style={{ marginBottom: 'var(--space-3)' }}>{t.hubModuleBadge}</span>
+              <h2 className="section-title">{t.hubTitle}</h2>
               <p className="section-sub" style={{ marginTop: 'var(--space-2)' }}>
-                Elect student representatives for the FIFA World Cup national teams. Only verified DIU students can vote.
+                {t.hubSubtitle}
               </p>
             </div>
           </div>
@@ -114,16 +306,16 @@ export default async function LandingPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span className="live-dot-pulse" style={{ display: 'inline-block', width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', animation: 'pulse 1.5s infinite' }} />
                     <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--text-primary)', textTransform: 'uppercase' }}>
-                      DIU Live Standings
+                      {t.scoreboardLiveTitle}
                     </span>
                   </div>
-                  <span className="badge badge-muted" style={{ fontSize: '9px', padding: '2px 8px', textTransform: 'none' }}>Live Tracker</span>
+                  <span className="badge badge-muted" style={{ fontSize: '9px', padding: '2px 8px', textTransform: 'none' }}>{t.scoreboardLiveTracker}</span>
                 </div>
                 
                 {standings.length === 0 ? (
                   <div style={{ padding: 'var(--space-6) 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>
-                    <p style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>No active standings yet</p>
-                    <p>Votes cast will appear here in real-time.</p>
+                    <p style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>{t.scoreboardNoStandings}</p>
+                    <p>{t.scoreboardNoStandingsDesc}</p>
                   </div>
                 ) : (
                   standings.map((stand, index) => {
@@ -174,9 +366,9 @@ export default async function LandingPage() {
               <div style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-3)', borderTop: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.02em' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-secondary)' }}>
                   <span style={{ width: '6px', height: '6px', background: 'var(--green)', borderRadius: '50%', display: 'inline-block' }} /> 
-                  SECURE BOOTH ONLINE
+                  {t.scoreboardStatusOnline}
                 </span>
-                <span>TOTAL TURNOUT: {totalVotersCount} VOTES</span>
+                <span>{t.scoreboardTurnout.replace('{count}', totalVotersCount.toString())}</span>
               </div>
             </div>
 
@@ -196,17 +388,17 @@ export default async function LandingPage() {
                   </div>
                   <div className="glow-card-content">
                     <div className="glow-card-title-row">
-                      <h3 className="glow-card-title">Cast Your Ballot</h3>
-                      <span className="badge badge-green badge-dot" style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.15)', color: 'var(--green)', textTransform: 'none', padding: '2px 8px', fontSize: '10px' }}>Active</span>
+                      <h3 className="glow-card-title">{t.cardVoteTitle}</h3>
+                      <span className="badge badge-green badge-dot" style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.15)', color: 'var(--green)', textTransform: 'none', padding: '2px 8px', fontSize: '10px' }}>{t.cardVoteActive}</span>
                     </div>
                     <p className="glow-card-desc">
-                      Access the secure voting booth with your student account to vote for divisional representatives.
+                      {t.cardVoteDesc}
                     </p>
                   </div>
                 </div>
                 <div className="glow-card-action">
                   <Link href="/login" className="btn btn-primary btn-sm btn-full">
-                    Vote Now →
+                    {t.cardVoteBtn}
                   </Link>
                 </div>
               </div>
@@ -224,17 +416,17 @@ export default async function LandingPage() {
                   </div>
                   <div className="glow-card-content">
                     <div className="glow-card-title-row">
-                      <h3 className="glow-card-title">View Candidates</h3>
-                      <span className="badge badge-dot" style={{ background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.2)', color: 'var(--fifa-purple)', textTransform: 'none', padding: '2px 8px', fontSize: '10px' }}>Nominees</span>
+                      <h3 className="glow-card-title">{t.cardCandidatesTitle}</h3>
+                      <span className="badge badge-dot" style={{ background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.2)', color: 'var(--fifa-purple)', textTransform: 'none', padding: '2px 8px', fontSize: '10px' }}>{t.cardCandidatesBadge}</span>
                     </div>
                     <p className="glow-card-desc">
-                      Examine candidate details, student manifests, and platforms for all contested division roles.
+                      {t.cardCandidatesDesc}
                     </p>
                   </div>
                 </div>
                 <div className="glow-card-action">
                   <Link href="/vote" className="btn btn-ghost btn-sm btn-full">
-                    Browse Nominees →
+                    {t.cardCandidatesBtn}
                   </Link>
                 </div>
               </div>
@@ -252,17 +444,17 @@ export default async function LandingPage() {
                   </div>
                   <div className="glow-card-content">
                     <div className="glow-card-title-row">
-                      <h3 className="glow-card-title">Full Standings</h3>
-                      <span className="badge badge-dot" style={{ background: 'rgba(6, 182, 212, 0.12)', border: '1px solid rgba(6, 182, 212, 0.2)', color: 'var(--fifa-cyan)', textTransform: 'none', padding: '2px 8px', fontSize: '10px' }}>Real-time</span>
+                      <h3 className="glow-card-title">{t.cardStandingsTitle}</h3>
+                      <span className="badge badge-dot" style={{ background: 'rgba(6, 182, 212, 0.12)', border: '1px solid rgba(6, 182, 212, 0.2)', color: 'var(--fifa-cyan)', textTransform: 'none', padding: '2px 8px', fontSize: '10px' }}>{t.cardStandingsBadge}</span>
                     </div>
                     <p className="glow-card-desc">
-                      Analyze real-time voter turnout rates, vote percentages, audit logs, and complete stats.
+                      {t.cardStandingsDesc}
                     </p>
                   </div>
                 </div>
                 <div className="glow-card-action">
                   <Link href="/standings" className="btn btn-ghost btn-sm btn-full">
-                    Standings Board →
+                    {t.cardStandingsBtn}
                   </Link>
                 </div>
               </div>
@@ -325,13 +517,13 @@ export default async function LandingPage() {
       <section className="section-padding" style={{ textAlign: 'center', paddingTop: 0 }}>
         <div className="cta-card">
           <h2 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, marginBottom: 'var(--space-4)', color: '#ffffff' }}>
-            Join the DIU FIFA Community
+            {t.ctaTitle}
           </h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-8)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-            Stay updated, vote in elections, and join varsity gaming tournaments with your <strong style={{ color: 'var(--text-primary)' }}>@diu.edu.bd</strong> Google account.
+            {t.ctaSubtitle}
           </p>
           <Link href="/login" className="btn btn-primary btn-lg">
-            Get Started →
+            {t.ctaBtn}
           </Link>
         </div>
       </section>

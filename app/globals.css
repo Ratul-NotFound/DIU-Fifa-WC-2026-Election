@@ -3149,6 +3149,30 @@ h4 { font-size: var(--text-base);font-weight: 600; }
   }
 }
 
+/* ── Jersey Section Custom Scroll & Animation ── */
+.jerseys-scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+.jerseys-scroll-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-full);
+}
+.jerseys-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-full);
+}
+.jerseys-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.jersey-card:hover .jersey-img-hover {
+  transform: scale(1.06);
+}
+.jersey-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 12px 30px var(--card-glow-color) !important;
+}
+
 
 
 

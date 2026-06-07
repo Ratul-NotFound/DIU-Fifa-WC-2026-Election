@@ -63,6 +63,7 @@ export default function AdminOverview() {
   const quickActions = [
     { label: 'Add Candidate', href: '/admin/candidates', icon: '👤' },
     { label: 'Manage Teams', href: '/admin/teams', icon: '🌍' },
+    { label: 'Manage Jerseys', href: '/admin/jerseys', icon: '👕' },
     { label: 'Election Control', href: '/admin/election', icon: '🗳️' },
     { label: 'View Standings', href: '/standings', icon: '📊' },
   ];

@@ -25,6 +25,7 @@ import type {
   ResultsDoc,
   AuditLog,
   Vote,
+  Jersey,
 } from '@/lib/types';
 
 let testMode = false;
@@ -54,6 +55,7 @@ interface MockDB {
   results: Record<string, ResultsDoc>;
   settings: ElectionSettings;
   logs: AuditLog[];
+  jerseys: Record<string, Jersey>;
 }
 
 function getMockDB(): MockDB {
@@ -67,8 +69,9 @@ function getMockDB(): MockDB {
         candidates: {},
         votes: {},
         results: {},
-        settings: { status: 'draft', votingStart: null, votingEnd: null, applicationsOpen: true, showStatusBanner: true, customBannerMessage: '', updatedAt: Date.now(), updatedBy: 'system' },
-        logs: []
+        settings: { status: 'draft', votingStart: null, votingEnd: null, applicationsOpen: true, showStatusBanner: true, customBannerMessage: '', showJerseys: false, updatedAt: Date.now(), updatedBy: 'system' },
+        logs: [],
+        jerseys: {}
       };
     }
     return g._diuFifaMockDb;
@@ -78,6 +81,14 @@ function getMockDB(): MockDB {
     try {
       const db = JSON.parse(data);
       let changed = false;
+      if (!db.jerseys) {
+        db.jerseys = {};
+        changed = true;
+      }
+      if (db.settings && db.settings.showJerseys === undefined) {
+        db.settings.showJerseys = false;
+        changed = true;
+      }
       if (db.positions) {
         if (!db.positions['joint_secretary']) {
           db.positions['joint_secretary'] = { id: 'joint_secretary', title: 'Joint Secretary', description: 'Assists General Secretary and handles records.', maxWinners: 2, order: 5 };
@@ -145,10 +156,15 @@ function getMockDB(): MockDB {
       'br_president': { teamId: 'br', positionId: 'president', candidateScores: { 'cand1': 12, 'cand2': 8 }, totalVotes: 20, updatedAt: Date.now() },
       'ar_president': { teamId: 'ar', positionId: 'president', candidateScores: { 'cand3': 15, 'cand4': 14 }, totalVotes: 29, updatedAt: Date.now() }
     },
-    settings: { status: 'live', votingStart: Date.now() - 3600000, votingEnd: Date.now() + 86400000, applicationsOpen: true, showStatusBanner: true, customBannerMessage: '', updatedAt: Date.now(), updatedBy: 'system' },
+    settings: { status: 'live', votingStart: Date.now() - 3600000, votingEnd: Date.now() + 86400000, applicationsOpen: true, showStatusBanner: true, customBannerMessage: '', showJerseys: true, updatedAt: Date.now(), updatedBy: 'system' },
     logs: [
       { id: 'log1', adminUid: 'system', adminName: 'System', action: 'Auto-seeded demo database with 15 FIFA teams.', target: 'system', details: '', timestamp: Date.now() }
-    ]
+    ],
+    jerseys: {
+      'jersey1': { id: 'jersey1', teamName: 'Argentina', edition: 'Player', colorVariant: 'Home', price: 1200, pictureUrl: 'https://images.unsplash.com/photo-1620987278429-ab178d6eb547?auto=format&fit=crop&w=400&q=80', createdAt: Date.now() - 2000 },
+      'jersey2': { id: 'jersey2', teamName: 'Brazil', edition: 'Fan', colorVariant: 'Home', price: 850, pictureUrl: 'https://images.unsplash.com/photo-1518144591331-17a5dd71c477?auto=format&fit=crop&w=400&q=80', createdAt: Date.now() - 1000 },
+      'jersey3': { id: 'jersey3', teamName: 'Germany', edition: 'Player', colorVariant: 'Away', price: 1100, pictureUrl: 'https://images.unsplash.com/photo-1543351611-58f69d7c1781?auto=format&fit=crop&w=400&q=80', createdAt: Date.now() }
+    }
   };
   localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(initial));
   return initial;
@@ -737,6 +753,61 @@ export async function getRecentAuditLogs(count = 50): Promise<AuditLog[]> {
   const q = query(collection(db, 'auditLogs'), orderBy('timestamp', 'desc'), limit(count));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as AuditLog));
+}
+
+// ══════════════════════════════════════════════════════════
+// JERSEYS
+// ══════════════════════════════════════════════════════════
+
+export async function getJerseys(): Promise<Jersey[]> {
+  if (!dbReady()) {
+    return Object.values(getMockDB().jerseys).sort((a, b) => b.createdAt - a.createdAt);
+  }
+  const snap = await getDocs(query(collection(db, 'jerseys'), orderBy('createdAt', 'desc')));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Jersey));
+}
+
+export async function getJersey(id: string): Promise<Jersey | null> {
+  if (!dbReady()) {
+    return getMockDB().jerseys[id] ?? null;
+  }
+  const snap = await getDoc(doc(db, 'jerseys', id));
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as Jersey) : null;
+}
+
+export async function createJersey(jersey: Omit<Jersey, 'id'>): Promise<string> {
+  const id = 'jersey_' + Math.random().toString(36).slice(2, 8);
+  if (!dbReady()) {
+    const mock = getMockDB();
+    const newJersey: Jersey = { id, ...jersey };
+    mock.jerseys[id] = newJersey;
+    saveMockDB(mock);
+    return id;
+  }
+  const ref = await addDoc(collection(db, 'jerseys'), { ...jersey, createdAt: Date.now() });
+  return ref.id;
+}
+
+export async function updateJersey(id: string, data: Partial<Jersey>): Promise<void> {
+  if (!dbReady()) {
+    const mock = getMockDB();
+    if (mock.jerseys[id]) {
+      mock.jerseys[id] = { ...mock.jerseys[id], ...data };
+      saveMockDB(mock);
+    }
+    return;
+  }
+  await updateDoc(doc(db, 'jerseys', id), data);
+}
+
+export async function deleteJersey(id: string): Promise<void> {
+  if (!dbReady()) {
+    const mock = getMockDB();
+    delete mock.jerseys[id];
+    saveMockDB(mock);
+    return;
+  }
+  await deleteDoc(doc(db, 'jerseys', id));
 }
 
 // ══════════════════════════════════════════════════════════

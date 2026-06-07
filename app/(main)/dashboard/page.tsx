@@ -6,9 +6,11 @@ import Link from 'next/link';
 import { getTeams, getElectionSettings, getAllResultsForTeam } from '@/lib/firebase/firestore';
 import type { Team, ElectionSettings, ResultsDoc } from '@/lib/types';
 import { statusLabel, getTeamFlagUrl, getTeamAccentColor, getTeamGradient } from '@/lib/utils/helpers';
+import { useLanguage } from '@/lib/context/LanguageContext';
 
 export default function DashboardPage() {
   const { profile } = useAuth();
+  const { lang, t } = useLanguage();
   const [teams, setTeams] = useState<Team[]>([]);
   const [settings, setSettings] = useState<ElectionSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,17 +23,42 @@ export default function DashboardPage() {
       setSettings(s);
       
       const h = new Date().getHours();
-      if (h < 12) setGreetingText('Good morning');
-      else if (h < 17) setGreetingText('Good afternoon');
-      else setGreetingText('Good evening');
+      if (h < 12) setGreetingText(lang === 'en' ? 'Good morning' : 'শুভ সকাল');
+      else if (h < 17) setGreetingText(lang === 'en' ? 'Good afternoon' : 'শুভ দুপুর');
+      else setGreetingText(lang === 'en' ? 'Good evening' : 'শুভ সন্ধ্যা');
       
       setLoading(false);
     }
     load();
-  }, []);
+  }, [lang]);
 
   const votedCount = profile?.votedPositions?.length ?? 0;
   const isLive = settings?.status === 'live';
+
+  const getLocalizedStatusLabel = (status: string) => {
+    if (lang === 'bn') {
+      const map: Record<string, string> = {
+        draft: 'ড্রাফট (অকার্যকর)',
+        live: 'লাইভ — ভোটদান চলছে',
+        counting: 'ভোট গণনা করা হচ্ছে',
+        finished: 'ফলাফল প্রকাশিত হয়েছে',
+      };
+      return map[status] ?? status;
+    }
+    return statusLabel(status);
+  };
+
+  const getLocalizedRole = (role: string) => {
+    if (lang === 'bn') {
+      const map: Record<string, string> = {
+        student: 'শিক্ষার্থী ভোটার',
+        admin: 'অ্যাডমিনিস্ট্রেটর',
+        superAdmin: 'সুপার অ্যাডমিন',
+      };
+      return map[role] ?? role;
+    }
+    return role;
+  };
 
   if (loading) {
     return <div className="loading-center"><div className="spinner" /></div>;
@@ -42,8 +69,8 @@ export default function DashboardPage() {
       {/* ── Header ── */}
       <div className="section-header">
         <div>
-          <h1>{greetingText}, {profile?.name?.split(' ')[0] || 'Student'} 👋</h1>
-          <p className="section-sub">FIFA World Cup Election Dashboard</p>
+          <h1>{greetingText}, {profile?.name?.split(' ')[0] || (lang === 'en' ? 'Student' : 'শিক্ষার্থী')} 👋</h1>
+          <p className="section-sub">{t.dashSub}</p>
         </div>
         {settings && (
           <span className={`badge ${
@@ -51,7 +78,7 @@ export default function DashboardPage() {
             settings.status === 'counting' ? 'badge-yellow' :
             settings.status === 'finished' ? 'badge-blue' : 'badge-muted'
           }`}>
-            {statusLabel(settings.status)}
+            {getLocalizedStatusLabel(settings.status)}
           </span>
         )}
       </div>
@@ -59,25 +86,25 @@ export default function DashboardPage() {
       {/* ── Stats ── */}
       <div className="stats-grid">
         <div className="stat-card">
-          <p className="stat-label">Teams</p>
+          <p className="stat-label">{lang === 'en' ? 'Teams' : 'দলসমূহ'}</p>
           <p className="stat-value">{teams.length}</p>
-          <p className="stat-sub">Participating</p>
+          <p className="stat-sub">{lang === 'en' ? 'Participating' : 'অংশগ্রহণকারী'}</p>
         </div>
         <div className="stat-card">
-          <p className="stat-label">Votes Cast</p>
+          <p className="stat-label">{lang === 'en' ? 'Votes Cast' : 'প্রদত্ত ভোট'}</p>
           <p className="stat-value">{votedCount}</p>
-          <p className="stat-sub">By you</p>
+          <p className="stat-sub">{lang === 'en' ? 'By you' : 'আপনার দেওয়া'}</p>
         </div>
         <div className="stat-card">
-          <p className="stat-label">Status</p>
+          <p className="stat-label">{lang === 'en' ? 'Status' : 'অবস্থা'}</p>
           <p className="stat-value" style={{ fontSize: 'var(--text-lg)' }}>
-            {settings ? statusLabel(settings.status) : 'Loading…'}
+            {settings ? getLocalizedStatusLabel(settings.status) : (lang === 'en' ? 'Loading…' : 'লোড হচ্ছে…')}
           </p>
         </div>
         <div className="stat-card">
-          <p className="stat-label">Role</p>
+          <p className="stat-label">{lang === 'en' ? 'Role' : 'ভূমিকা'}</p>
           <p className="stat-value" style={{ fontSize: 'var(--text-lg)', textTransform: 'capitalize' }}>
-            {profile?.role ?? 'Student'}
+            {profile?.role ? getLocalizedRole(profile.role) : (lang === 'en' ? 'Student' : 'শিক্ষার্থী')}
           </p>
         </div>
       </div>
@@ -92,17 +119,17 @@ export default function DashboardPage() {
           <>
             {settings?.status === 'draft' && (
               <div className="alert alert-info" style={{ marginBottom: 'var(--space-6)' }}>
-                🗓 Election has not started yet. Check back soon.
+                🗓 {lang === 'en' ? 'Election has not started yet. Check back soon.' : 'নির্বাচন এখনও শুরু হয়নি। কিছু সময় পর চেক করুন।'}
               </div>
             )}
             {settings?.status === 'counting' && (
               <div className="alert alert-warning" style={{ marginBottom: 'var(--space-6)' }}>
-                🔢 Voting is closed. Results are being counted.
+                🔢 {lang === 'en' ? 'Voting is closed. Results are being counted.' : 'ভোটদান বন্ধ রয়েছে। ভোট গণনা করা হচ্ছে।'}
               </div>
             )}
             {settings?.status === 'finished' && (
               <div className="alert alert-success" style={{ marginBottom: 'var(--space-6)' }}>
-                🏆 Election finished! <Link href="/standings" style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}>View final standings →</Link>
+                🏆 {lang === 'en' ? 'Election finished!' : 'নির্বাচন সম্পন্ন হয়েছে!'} <Link href="/standings" style={{ color: 'inherit', fontWeight: 600, textDecoration: 'underline' }}>{lang === 'en' ? 'View final standings →' : 'চূড়ান্ত ফলাফল দেখুন →'}</Link>
               </div>
             )}
           </>
@@ -112,13 +139,15 @@ export default function DashboardPage() {
       {/* ── Teams Grid ── */}
       <div className="section-header">
         <div>
-          <h2 className="section-title">National Teams</h2>
+          <h2 className="section-title">{lang === 'en' ? 'National Teams' : 'জাতীয় দলসমূহ'}</h2>
           <p className="section-sub">
-            {isLive ? 'Select a team to vote for their committee members' : 'Teams participating in the election'}
+            {isLive 
+              ? (lang === 'en' ? 'Select a team to vote for their committee members' : 'কমিটি সদস্যদের ভোট দিতে একটি দল নির্বাচন করুন') 
+              : (lang === 'en' ? 'Teams participating in the election' : 'নির্বাচনে অংশগ্রহণকারী দলসমূহ')}
           </p>
         </div>
         <Link href="/standings" className="btn btn-ghost btn-sm">
-          View Standings →
+          {lang === 'en' ? 'View Standings →' : 'ফলাফল দেখুন →'}
         </Link>
       </div>
 
@@ -148,12 +177,12 @@ export default function DashboardPage() {
                 <p className="team-card-name">{team.name}</p>
                 {hasVoted && (
                   <span className="badge badge-green" style={{ marginTop: 'var(--space-2)', fontSize: '10px' }}>
-                    ✓ Voted
+                    ✓ {lang === 'en' ? 'Voted' : 'ভোট দিয়েছেন'}
                   </span>
                 )}
                 {isLive && !hasVoted && (
                   <span className="badge badge-blue" style={{ marginTop: 'var(--space-2)', fontSize: '10px' }}>
-                    Vote Now
+                    {t.dashVoteNowBtn}
                   </span>
                 )}
               </div>
@@ -165,8 +194,10 @@ export default function DashboardPage() {
       {teams.length === 0 && (
         <div className="empty-state">
           <span className="empty-icon">⚽</span>
-          <p className="empty-title">No Teams Yet</p>
-          <p className="empty-desc">Teams will appear here once the admin adds them.</p>
+          <p className="empty-title">{lang === 'en' ? 'No Teams Yet' : 'কোন দল নেই'}</p>
+          <p className="empty-desc">
+            {lang === 'en' ? 'Teams will appear here once the admin adds them.' : 'অ্যাডমিন দল যুক্ত করার পর এখানে প্রদর্শিত হবে।'}
+          </p>
         </div>
       )}
 
