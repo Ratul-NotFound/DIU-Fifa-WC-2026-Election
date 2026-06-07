@@ -234,23 +234,24 @@ export function onAuthChange(callback: (user: User | null) => void): () => void 
 
 // Helper to parse student ID and calculate batch from DIU email prefix
 function parseStudentIdAndBatch(emailPrefix: string): { studentId: string; batch: string } {
-  // If it's already in format 201-15-5678, return it
-  if (/^\d{2,3}-\d{2,3}-\d{4,6}$/.test(emailPrefix)) {
-    const parts = emailPrefix.split('-');
-    const part1 = parts[0];
+  // Case 1: Search for a hyphenated ID block (e.g. 262-33-009 or ratul-231-05-101298)
+  const hyphenMatch = emailPrefix.match(/\d{2,3}-\d{2,3}-\d{3,6}/);
+  if (hyphenMatch) {
+    const studentId = hyphenMatch[0];
+    const part1 = studentId.split('-')[0];
     const year = parseInt(part1.slice(0, 2), 10);
     const sem = parseInt(part1.slice(2, 3), 10);
     let calculatedBatch = '55th';
-    if (!isNaN(year) && !isNaN(sem) && sem >= 1 && sem <= 3) {
+    if (!isNaN(year) && !isNaN(sem) && sem >= 0 && sem <= 3) {
       calculatedBatch = `${55 + (year - 20) * 3 + (sem - 1)}`;
     }
-    return { studentId: emailPrefix, batch: calculatedBatch };
+    return { studentId, batch: calculatedBatch };
   }
 
-  // Look for any continuous digits sequence of length 8 to 12 in the prefix
-  const match = emailPrefix.match(/\d{9,12}/);
-  if (match) {
-    const digits = match[0];
+  // Case 2: Search for a continuous sequence of 8 to 12 digits (ignores stray digits in names)
+  const digitsMatch = emailPrefix.match(/\d{8,12}/);
+  if (digitsMatch) {
+    const digits = digitsMatch[0];
     const part1 = digits.slice(0, 3);
     const part2 = digits.slice(3, 5);
     const part3 = digits.slice(5);
@@ -259,7 +260,7 @@ function parseStudentIdAndBatch(emailPrefix: string): { studentId: string; batch
     const year = parseInt(part1.slice(0, 2), 10);
     const sem = parseInt(part1.slice(2, 3), 10);
     let calculatedBatch = '55th';
-    if (!isNaN(year) && !isNaN(sem) && sem >= 1 && sem <= 3) {
+    if (!isNaN(year) && !isNaN(sem) && sem >= 0 && sem <= 3) {
       calculatedBatch = `${55 + (year - 20) * 3 + (sem - 1)}`;
     }
     return { studentId, batch: calculatedBatch };
