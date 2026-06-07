@@ -88,17 +88,25 @@ export default function ParticipatePage() {
 
     async function loadData() {
       try {
-        const [t, pos, existing, settingsDoc] = await Promise.all([
+        // 1. Fetch public teams and positions first (should not fail)
+        const [t, pos] = await Promise.all([
           getTeams(),
-          getPositions(),
-          getCandidateByUid(uid),
-          getElectionSettings()
+          getPositions()
         ]);
-
         setTeams(t);
         setPositions(pos);
-        setExistingCandidate(existing);
-        setSettings(settingsDoc);
+
+        // 2. Fetch user-specific info and settings (handles errors safely)
+        try {
+          const [existing, settingsDoc] = await Promise.all([
+            getCandidateByUid(uid),
+            getElectionSettings()
+          ]);
+          setExistingCandidate(existing);
+          setSettings(settingsDoc);
+        } catch (userErr) {
+          console.warn('Error loading registration status or settings:', userErr);
+        }
 
         // Prefill form if profile data exists
         if (profile) {
@@ -108,8 +116,8 @@ export default function ParticipatePage() {
           setBatch(profile.batch || '');
         }
       } catch (err) {
-        console.error('Error loading registration data:', err);
-        setError('Failed to load initial data.');
+        console.error('Error loading core registration data:', err);
+        setError('Failed to load divisions or positions.');
       } finally {
         setLoadingData(false);
       }

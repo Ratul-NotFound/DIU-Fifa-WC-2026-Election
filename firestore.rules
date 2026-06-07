@@ -63,10 +63,15 @@ service cloud.firestore {
 
     // ── CANDIDATES ─────────────────────────────────────────
     match /candidates/{candId} {
-      // Approved candidates visible to all
-      allow read: if resource.data.approved == true || isAdmin();
-      // Admin can create or delete candidates
-      allow create, delete: if isAdmin();
+      // Approved candidates visible to all; users can read their own candidate application; admins can read all
+      allow read: if resource.data.approved == true || isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      // Admin can delete candidates; signed-in users can apply (must be for themselves and unapproved initially)
+      allow create: if isAdmin() || (
+        isSignedIn() && isDIUEmail() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.approved == false
+      );
+      allow delete: if isAdmin();
       // Users can update candidate's votesReceived (only increment by 1)
       allow update: if isAdmin() || (
         isSignedIn() && isDIUEmail() &&
