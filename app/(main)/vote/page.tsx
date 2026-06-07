@@ -117,8 +117,12 @@ function VoteBoothContent() {
         const votesMap: Record<string, string> = {};
         await Promise.all(
           positions.map(async (p) => {
-            const v = await getUserVoteForPosition(user.uid, selectedTeamId, p.id);
-            if (v) votesMap[p.id] = v;
+            try {
+              const v = await getUserVoteForPosition(user.uid, selectedTeamId, p.id);
+              if (v) votesMap[p.id] = v;
+            } catch (err) {
+              console.error(`Error loading vote for position ${p.id}:`, err);
+            }
           })
         );
         setSelectedVotes(votesMap);

@@ -610,10 +610,15 @@ export async function getUserVoteForPosition(
     );
     return vote ? vote.candidateId : null;
   }
-  const voteDocId = `${voterUid}_${teamId}_${positionId}`;
-  const snap = await getDoc(doc(db, 'votes', voteDocId));
-  if (!snap.exists()) return null;
-  return snap.data().candidateId;
+  try {
+    const voteDocId = `${voterUid}_${teamId}_${positionId}`;
+    const snap = await getDoc(doc(db, 'votes', voteDocId));
+    if (!snap.exists()) return null;
+    return snap.data().candidateId;
+  } catch (err) {
+    console.warn("Error fetching user vote (likely not voted yet or permission bounds):", err);
+    return null;
+  }
 }
 
 // ══════════════════════════════════════════════════════════

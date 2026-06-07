@@ -96,8 +96,8 @@ service cloud.firestore {
                       get(/databases/$(database)/documents/electionSettings/main).data.votingEnd == null ||
                       request.time.toMillis() <= get(/databases/$(database)/documents/electionSettings/main).data.votingEnd
                     );
-      // Users can read their own votes; only admin can read all
-      allow read: if isAdmin() || (isSignedIn() && resource.data.voterUid == request.auth.uid);
+      // Users can read their own votes; only admin can read all (resource == null allows reading non-existent docs without crash)
+      allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.voterUid == request.auth.uid));
       // No updates or deletes on votes
       allow update, delete: if false;
     }
