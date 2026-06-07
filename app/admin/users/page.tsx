@@ -52,8 +52,66 @@ export default function AdminUsersPage() {
     showMsg(`✓ Role updated for ${name}.`);
   };
 
-  const filtered = users.filter(u =>
-    !search || u.name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()) || u.studentId?.includes(search)
+  const getDisplayStudentIdAndBatch = (u: UserProfile) => {
+    let displayId = u.studentId || '';
+    let displayBatch = u.batch || '';
+
+    const emailPrefix = u.email ? u.email.split('@')[0] : '';
+
+    // Case 1: email prefix is already a formatted student ID (e.g. 262-33-009)
+    if (/^\d{2,3}-\d{2,3}-\d{3,6}$/.test(emailPrefix)) {
+      if (displayId === '201-15-5678' || !displayId) {
+        displayId = emailPrefix;
+      }
+      if (displayBatch === '55th' || displayBatch === '55' || !displayBatch) {
+        const part1 = emailPrefix.split('-')[0];
+        const year = parseInt(part1.slice(0, 2), 10);
+        const sem = parseInt(part1.slice(2, 3), 10);
+        if (!isNaN(year) && !isNaN(sem) && sem >= 0 && sem <= 3) {
+          const batchNum = 55 + (year - 20) * 3 + (sem - 1);
+          displayBatch = `${batchNum}`;
+        }
+      }
+    } else {
+      // Case 2: email prefix has continuous digits (e.g. junayed2305101105)
+      const digitsOnly = emailPrefix.replace(/\D/g, '');
+      if ((displayId === '201-15-5678' || !displayId) && digitsOnly.length >= 8 && digitsOnly.length <= 12) {
+        const part1 = digitsOnly.slice(0, 3);
+        const part2 = digitsOnly.slice(3, 5);
+        const part3 = digitsOnly.slice(5);
+        displayId = `${part1}-${part2}-${part3}`;
+
+        if (displayBatch === '55th' || displayBatch === '55' || !displayBatch) {
+          const year = parseInt(part1.slice(0, 2), 10);
+          const sem = parseInt(part1.slice(2, 3), 10);
+          if (!isNaN(year) && !isNaN(sem) && sem >= 0 && sem <= 3) {
+            const batchNum = 55 + (year - 20) * 3 + (sem - 1);
+            displayBatch = `${batchNum}`;
+          }
+        }
+      }
+    }
+
+    if (displayBatch && !isNaN(Number(displayBatch))) {
+      displayBatch = `${displayBatch}th`;
+    }
+
+    return {
+      studentId: displayId || '—',
+      batch: displayBatch || '—'
+    };
+  };
+
+  const usersWithDisplayDetails = users.map(u => {
+    const { studentId, batch } = getDisplayStudentIdAndBatch(u);
+    return { ...u, displayStudentId: studentId, displayBatch: batch };
+  });
+
+  const filtered = usersWithDisplayDetails.filter(u =>
+    !search || 
+    u.name?.toLowerCase().includes(search.toLowerCase()) || 
+    u.email?.toLowerCase().includes(search.toLowerCase()) || 
+    u.displayStudentId.includes(search)
   );
 
   if (loading) return <div className="loading-center"><div className="spinner" /></div>;
@@ -124,8 +182,8 @@ export default function AdminUsersPage() {
               <tr key={u.uid}>
                 <td data-label="Name"><strong style={{ fontSize: 'var(--text-sm)' }}>{u.name || '—'}</strong></td>
                 <td data-label="Email"><span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{u.email}</span></td>
-                <td data-label="Student ID"><span style={{ fontSize: 'var(--text-sm)' }}>{u.studentId || '—'}</span></td>
-                <td data-label="Dept/Batch"><span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>{u.department || '—'} / {u.batch || '—'}</span></td>
+                <td data-label="Student ID"><span style={{ fontSize: 'var(--text-sm)' }}>{u.displayStudentId}</span></td>
+                <td data-label="Dept/Batch"><span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>{u.department || '—'} / {u.displayBatch}</span></td>
                 <td data-label="Votes Cast">
                   <span className="badge badge-muted">{u.votedPositions?.length ?? 0}</span>
                 </td>
